@@ -47,11 +47,27 @@
 
         .wallet-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 5px 20px 20px; scroll-snap-type: x mandatory; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; }
         .wallet-scroll::-webkit-scrollbar { display: none; }
-        .wallet-card { flex: 0 0 280px; scroll-snap-align: center; background: linear-gradient(135deg, #007AFF, #0051FF); border-radius: 20px; padding: 20px; color: white; box-shadow: 0 8px 20px rgba(0,122,255,0.3); position: relative; cursor: pointer; transition: 0.3s; opacity: 0.5; transform: scale(0.95); }
+        
+        .wallet-card { flex: 0 0 280px; scroll-snap-align: center; background: linear-gradient(135deg, #007AFF, #0051FF); border-radius: 20px; padding: 20px; color: white; box-shadow: 0 8px 20px rgba(0,122,255,0.3); position: relative; cursor: pointer; transition: 0.3s; opacity: 0.5; transform: scale(0.95); overflow: hidden; }
         .wallet-card.active { opacity: 1; transform: scale(1); }
         .wallet-card.add-new { background: #E5E5EA; color: var(--blue); opacity: 1; box-shadow: none; display: flex; align-items: center; justify-content: center; flex-direction: column; font-weight: 600; font-size: 15px; border: 2px dashed #C7C7CC; transform: scale(0.95); }
         .wallet-edit-btn { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.25); width: 32px; height: 32px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 14px; backdrop-filter: blur(5px); z-index: 2; transition: 0.2s; }
         .wallet-edit-btn:active { background: rgba(255,255,255,0.5); }
+        
+        /* Chevron UI & Wallet Details PERBAIKAN DI KIRI */
+        .wallet-action-bar { display: flex; align-items: center; justify-content: flex-start; margin-top: 15px; cursor: pointer; border-top: 0.5px solid rgba(255,255,255,0.2); padding-top: 12px; }
+        .wallet-action-left { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 12px; backdrop-filter: blur(10px); }
+        .wallet-chevron-icon { display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); }
+        .wallet-card.expanded .wallet-chevron-icon { transform: rotate(180deg); }
+        
+        .wallet-details { display: none; margin-top: 15px; animation: fadeIn 0.3s ease; }
+        .wallet-card.expanded .wallet-details { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .wallet-btn-transfer { width: 100%; background: rgba(255,255,255,0.2); border: none; padding: 10px; border-radius: 10px; color: white; font-weight: 600; font-size: 13px; margin-bottom: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .wallet-budget-info { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+        .wallet-budget-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
+        .wallet-budget-fill { height: 100%; background: white; border-radius: 3px; transition: width 0.5s ease; }
 
         .view { display: none; height: 100%; flex-direction: column; position: relative; }
         .view.active { display: flex; }
@@ -159,9 +175,6 @@
         .ios-alert-btn { flex: 1; padding: 12px 0; background: transparent; border: none; color: var(--blue); font-size: 17px; cursor: pointer; font-weight: 400; }
         .ios-alert-btn.cancel { border-right: 0.5px solid var(--separator); }
         .ios-alert-btn.confirm { font-weight: 600; }
-        
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator { opacity: 0; width: 100%; height: 100%; position: absolute; left: 0; top: 0; cursor: pointer; }
-        input[type="datetime-local"] { position: relative; }
     </style>
 </head>
 <body>
@@ -209,12 +222,10 @@
 
             <div id="stats-content-wrapper" style="overflow: hidden; transition: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1); transform-origin: top; max-height: 0px; opacity: 0; margin-top: -10px;">
                 <div class="chart-container" id="chart-section" style="display: none;">
-                    
                     <div class="segmented-control" style="margin-bottom: 15px;">
                         <div id="seg-chart-expense" class="segment-btn active" onclick="setChartMode('expense')">Pengeluaran</div>
                         <div id="seg-chart-income" class="segment-btn" onclick="setChartMode('income')">Pemasukan</div>
                     </div>
-
                     <div class="chart-filter">
                         <button class="filter-btn active" onclick="setChartFilter('month', this)">Bulan Ini</button>
                         <button class="filter-btn" onclick="setChartFilter('week', this)">Minggu Ini</button>
@@ -249,7 +260,7 @@
     <div id="modal-tx" class="modal-overlay">
         <div class="modal-sheet">
             <div class="modal-header">
-                <button onclick="closeModal('modal-tx')" style="background:none; border:none; color:var(--blue); font-size:16px;">Batal</button>
+                <button onclick="closeModal('modal-tx', false)" style="background:none; border:none; color:var(--blue); font-size:16px;">Batal</button>
                 <strong id="modal-tx-title">Transaksi Baru</strong>
                 <button onclick="saveTransaction()" style="background:none; border:none; color:var(--blue); font-weight:600; font-size:16px;">Simpan</button>
             </div>
@@ -268,14 +279,7 @@
                     <span id="btn-edit-mode" onclick="toggleEditMode()" style="color: var(--blue); font-size: 14px; font-weight: 500; cursor: pointer; padding-right: 5px;">Edit</span>
                 </div>
                 <div class="chips-container" id="cat-container"></div>
-                <div class="icon-grid" id="icon-container" style="margin-top: 15px;"></div>
-                
-                <div class="input-group" style="margin-top: 25px;">
-                    <div class="form-row">
-                        <label>Waktu</label>
-                        <input type="datetime-local" id="tx-date" style="font-size: 15px; color: var(--text-main);">
-                    </div>
-                </div>
+                <div class="icon-grid" id="icon-container" style="margin-top: 15px; margin-bottom: 30px;"></div>
             </div>
         </div>
     </div>
@@ -293,7 +297,7 @@
     <div id="modal-saving-detail" class="modal-overlay">
         <div class="modal-sheet">
             <div class="modal-header">
-                <button onclick="closeModal('modal-saving-detail')" style="background:none; border:none; color:var(--blue); font-size:16px;">Tutup</button>
+                <button onclick="closeModal('modal-saving-detail', false)" style="background:none; border:none; color:var(--blue); font-size:16px;">Tutup</button>
                 <strong>Detail Tabungan</strong><span style="width: 40px;"></span>
             </div>
             <div class="modal-body">
@@ -302,14 +306,12 @@
                     <h2 id="sav-det-name">Nama</h2>
                     <h1 id="sav-det-current" style="color:var(--blue); margin: 5px 0;">Rp 0</h1>
                     <div id="sav-det-remaining" style="font-size: 13px; color: var(--text-sub); margin-bottom: 15px;">Kurang Rp 0 lagi</div>
-                    
                     <div class="progress-bar"><div class="progress-fill" id="sav-det-fill"></div></div>
                     <div class="detail-amounts">
                         <span>Terkumpul: <span id="sav-det-perc">0%</span></span>
                         <span>Target: <span id="sav-det-target">Rp 0</span></span>
                     </div>
                 </div>
-
                 <div style="background: white; border-radius: 12px; margin-bottom: 15px; overflow: hidden;">
                     <div onclick="toggleSavHist()" style="padding: 16px; font-weight: 600; font-size: 15px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
                         Riwayat Tabungan 
@@ -319,7 +321,6 @@
                     </div>
                     <div id="sav-hist-container" style="display: none; padding: 0 16px 16px; border-top: 0.5px solid var(--separator);"></div>
                 </div>
-
                 <div class="menu-list">
                     <button class="menu-item" style="font-weight: 600;" onclick="savingAction('add')">➕ Nabung (Masuk)</button>
                     <button class="menu-item" onclick="savingAction('withdraw')">➖ Tarik Tabungan (Keluar)</button>
@@ -338,7 +339,7 @@
             </div>
             <div class="ios-alert-inputs" id="alert-inputs"></div>
             <div class="ios-alert-buttons">
-                <button class="ios-alert-btn cancel" id="alert-cancel" onclick="closeIOSDialog()">Batal</button>
+                <button class="ios-alert-btn cancel" id="alert-cancel" onclick="closeIOSDialog(false)">Batal</button>
                 <button class="ios-alert-btn confirm" id="alert-confirm">OK</button>
             </div>
         </div>
@@ -359,6 +360,48 @@
     let activeTxId = null, activeSavId = null, isEditMode = false, isSavHistOpen = false;
     let iosDialogTimeout;
 
+    // --- SISTEM HARDWARE BACK BUTTON (ANTI-BUG SOLID) ---
+    let activeModals = []; 
+    let isWalletExpanded = false; 
+
+    window.addEventListener('load', () => {
+        // Pasang pelacak pertama kali masuk (Jebakan awal)
+        history.pushState({ page: 'main' }, "");
+    });
+
+    window.addEventListener('popstate', (e) => {
+        // 1. Jika ada popup/Batal yang diklik dengan JS (bukan back HP), abaikan eksekusi popstate
+        if (window.__disableExitPopup) {
+            window.__disableExitPopup = false; 
+            return;
+        }
+
+        // 2. Jika ada Modal terbuka (user benar-benar tekan Back HP)
+        if (activeModals.length > 0) {
+            const idToClose = activeModals[activeModals.length - 1];
+            if (idToClose === 'ios-alert-overlay') {
+                closeIOSDialog(true); // true = popstate trigger
+            } else {
+                closeModal(idToClose, true); // true = popstate trigger
+            }
+        } 
+        // 3. Jika user di halaman utama tekan Back HP
+        else if (currentUser) {
+            history.pushState({ page: 'main' }, ""); // Pasang kembali jebakan agar tidak bocor
+            
+            customIOSDialog({
+                type: 'confirm',
+                title: 'Keluar Aplikasi',
+                msg: 'Apakah Anda yakin ingin keluar dari sistem?',
+                onConfirm: () => {
+                    // Paksa keluar yang aman untuk Android / PWA
+                    window.location.replace("about:blank");
+                    setTimeout(() => { try { window.close(); } catch(err){} }, 100);
+                }
+            });
+        }
+    });
+
     let expenseChartInstance = null;
     let currentChartFilter = 'month', currentChartMode = 'expense';
     let isStatsOpen = false, customFilterStart = 0, customFilterEnd = Date.now();
@@ -366,11 +409,10 @@
 
     const formatRp = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
     
-    // FUNGSI PELINDUNG: Mencegah tanggal rusak/NaN dan memulihkan catatan hilang
     function getValidTimestamp(ts) {
         if (!ts) return Date.now();
         if (typeof ts === 'number') return ts;
-        if (!isNaN(ts) && ts.toString().trim() !== '') return Number(ts);
+        if (typeof ts === 'string' && !isNaN(ts) && ts.trim() !== '') return Number(ts);
         const parsed = new Date(ts).getTime();
         return isNaN(parsed) ? Date.now() : parsed;
     }
@@ -414,7 +456,7 @@
             if (existing) { hideLoader(); return customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Username sudah dipakai.'}); }
             const { data, error } = await supabaseClient.from('users').insert({ username: user, password: pass }).select().single();
             if (error || !data) { hideLoader(); return customIOSDialog({type: 'alert', title: 'Error', msg: 'Terjadi kesalahan sistem.'}); }
-            await Promise.all([ supabaseClient.from('wallets').insert({ id: Date.now(), user_id: data.id, name: 'Dompet Utama' }), supabaseClient.from('user_settings').insert({ user_id: data.id, categories: ['🍔 Makan', '🚗 Transport', '📚 Kuliah'], icons: ['💸','🍔','🚗','📚','🎮','💰','🛒'] }) ]);
+            await Promise.all([ supabaseClient.from('wallets').insert({ id: Date.now(), user_id: data.id, name: 'Dompet Utama', budget: 0 }), supabaseClient.from('user_settings').insert({ user_id: data.id, categories: ['🍔 Makan', '🚗 Transport', '📚 Kuliah'], icons: ['💸','🍔','🚗','📚','🎮','💰','🛒'] }) ]);
             loginSuccess(data);
         }
     }
@@ -426,7 +468,7 @@
     }
 
     function logout() {
-        customIOSDialog({ type: 'confirm', title: 'Keluar', msg: 'Yakin ingin keluar?', onConfirm: () => {
+        customIOSDialog({ type: 'confirm', title: 'Keluar', msg: 'Yakin ingin log out dari akun ini?', onConfirm: () => {
             localStorage.removeItem('zaim_user'); localStorage.removeItem('zaim_tx'); localStorage.removeItem('zaim_wallets'); localStorage.removeItem('zaim_sav'); currentUser = null;
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('app-tab-bar').style.display = 'none'; document.getElementById('view-auth').style.display = 'flex'; isLoginMode = true; toggleAuthMode(); toggleAuthMode();
         }});
@@ -446,16 +488,14 @@
                 supabaseClient.from('user_settings').select('*').eq('user_id', uid).single()
             ]);
 
-            wallets = wRes.data || [];
+            wallets = (wRes.data || []).map(w => ({...w, budget: w.budget || 0}));
             savings = sRes.data || [];
             
-            // PERBAIKAN: Format ulang semua timestamp agar catatan tidak ada yang hilang
             transactions = (tRes.data || []).map(t => {
                 t.timestamp = getValidTimestamp(t.timestamp);
                 return t;
             });
-            // Pastikan terurut dengan benar
-            transactions.sort((a, b) => b.timestamp - a.timestamp);
+            transactions.sort((a, b) => getValidTimestamp(b.timestamp) - getValidTimestamp(a.timestamp));
             
             if(cRes.data) { customCats = cRes.data.categories || ['🍔 Makan']; customIcons = cRes.data.icons || ['💸']; } 
             else { customCats = ['🍔 Makan', '🚗 Transport', '📚 Kuliah']; customIcons = ['💸','🍔','🚗','📚','🎮','💰','🛒']; }
@@ -482,27 +522,191 @@
                 } else { inpContainer.innerHTML += `<input type="${inp.type || 'text'}" id="alert-inp-${i}" class="ios-alert-input" placeholder="${inp.placeholder || ''}" value="${inp.value || ''}" autocomplete="off">`; }
             });
         } else { inpContainer.style.display = 'none'; }
+        
         document.getElementById('alert-cancel').style.display = (type === 'alert') ? 'none' : 'block';
-        const okBtn = document.getElementById('alert-confirm'); okBtn.innerText = (type === 'confirm' && msg.includes('Hapus')) ? 'Yakin' : 'OK'; okBtn.style.color = (type === 'confirm' && msg.includes('Hapus')) ? 'var(--red)' : 'var(--blue)';
-        const overlay = document.getElementById('ios-alert-overlay'); overlay.style.display = 'flex'; setTimeout(() => overlay.classList.add('active'), 10);
-        okBtn.onclick = () => { let vals = []; if (inputs.length > 0) vals = inputs.map((_, i) => document.getElementById(`alert-inp-${i}`).value); closeIOSDialog(); if (onConfirm) onConfirm(vals); };
+        const okBtn = document.getElementById('alert-confirm'); 
+        okBtn.innerText = (type === 'confirm' && (msg.includes('Hapus') || msg.includes('keluar'))) ? 'Yakin' : 'OK'; 
+        okBtn.style.color = (type === 'confirm' && (msg.includes('Hapus')||msg.includes('keluar'))) ? 'var(--red)' : 'var(--blue)';
+        
+        const overlay = document.getElementById('ios-alert-overlay'); 
+        overlay.style.display = 'flex'; 
+        setTimeout(() => overlay.classList.add('active'), 10);
+        
+        activeModals.push('ios-alert-overlay');
+        history.pushState({ popup: 'ios-alert-overlay' }, "");
+
+        okBtn.onclick = () => { 
+            let vals = []; 
+            if (inputs.length > 0) vals = inputs.map((_, i) => document.getElementById(`alert-inp-${i}`).value); 
+            closeIOSDialog(false); 
+            if (onConfirm) setTimeout(() => onConfirm(vals), 250); 
+        };
     }
+
     function selectIosOption(el, inpIndex) { const group = document.getElementById(`group-${inpIndex}`); group.querySelectorAll('.ios-select-opt').forEach(opt => opt.classList.remove('selected')); el.classList.add('selected'); document.getElementById(`alert-inp-${inpIndex}`).value = el.getAttribute('data-val'); }
-    function closeIOSDialog() { const overlay = document.getElementById('ios-alert-overlay'); overlay.classList.remove('active'); iosDialogTimeout = setTimeout(() => overlay.style.display = 'none', 200); }
+    
+    // FUNGSI PENTING: Penutup Dialog Utama (Dilengkapi pencegah kebocoran PopState)
+    function closeIOSDialog(isFromPopState = false) { 
+        const overlay = document.getElementById('ios-alert-overlay'); 
+        overlay.classList.remove('active'); 
+        iosDialogTimeout = setTimeout(() => overlay.style.display = 'none', 200); 
+
+        const index = activeModals.indexOf('ios-alert-overlay');
+        if (index > -1) {
+            activeModals.splice(index, 1);
+        }
+
+        // Kalau ditutup oleh tombol Batal/OK, mundurkan riwayat history secara semu
+        if (isFromPopState !== true) {
+            window.__disableExitPopup = true;
+            history.back();
+        }
+    }
+
     function switchView(view, el) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active')); document.getElementById('view-' + view).classList.add('active'); el.classList.add('active'); }
 
-    // --- DOMPET ---
+    // --- DOMPET (DENGAN CHEVRON KIRI) ---
     function renderWallets() {
         const container = document.getElementById('wallet-scroll-container'); container.innerHTML = '';
+        
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
         wallets.forEach(w => {
-            let wBal = 0; transactions.filter(t => t.walletId == w.id).forEach(t => { wBal += t.type === 'income' ? t.amount : -t.amount; });
-            container.innerHTML += `<div class="wallet-card ${w.id == activeWalletId ? 'active' : ''}" onclick="selectWallet(${w.id})"><div class="wallet-edit-btn" onclick="editWallet(${w.id}, event)">✏️</div><p style="opacity: 0.9; font-size: 14px; margin-bottom: 5px;">${w.name}</p><h2 style="font-size: 32px; letter-spacing:-1px;">${formatRp(wBal)}</h2></div>`;
+            let wBal = 0; 
+            let wExpenseMonth = 0;
+
+            transactions.filter(t => t.walletId == w.id).forEach(t => { 
+                wBal += t.type === 'income' ? t.amount : -t.amount; 
+                if(t.type === 'expense' && t.timestamp >= startOfMonth && t.category !== 'Transfer') {
+                    wExpenseMonth += t.amount;
+                }
+            });
+
+            let expandedClass = (w.id == activeWalletId && isWalletExpanded) ? 'expanded' : '';
+            let budgetPerc = w.budget > 0 ? Math.min((wExpenseMonth / w.budget) * 100, 100) : 0;
+            let budgetColor = budgetPerc >= 90 ? 'var(--red)' : (budgetPerc >= 70 ? '#FF9500' : 'white');
+
+            container.innerHTML += `
+                <div class="wallet-card ${w.id == activeWalletId ? 'active' : ''} ${expandedClass}" onclick="selectWallet(${w.id})">
+                    <div class="wallet-edit-btn" onclick="editWallet(${w.id}, event)">✏️</div>
+                    <p style="opacity: 0.9; font-size: 14px; margin-bottom: 5px;">${w.name}</p>
+                    <h2 style="font-size: 32px; letter-spacing:-1px;">${formatRp(wBal)}</h2>
+                    
+                    ${w.id == activeWalletId ? `
+                        <div class="wallet-action-bar" onclick="toggleWalletExpand(event)">
+                            <div class="wallet-action-left">
+                                <span class="wallet-chevron-icon">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </span>
+                                <span>Detail & Transfer</span>
+                            </div>
+                        </div>
+                        
+                        <div class="wallet-details">
+                            <button class="wallet-btn-transfer" onclick="transferWallet(event)">⇄ Transfer Antar Dompet</button>
+                            
+                            <div class="wallet-budget-info">
+                                <span>Terpakai: ${formatRp(wExpenseMonth)}</span>
+                                <span onclick="setWalletBudget(event)" style="cursor:pointer; text-decoration:underline;">Batas: ${w.budget > 0 ? formatRp(w.budget) : 'Set Limit'}</span>
+                            </div>
+                            <div class="wallet-budget-bar">
+                                <div class="wallet-budget-fill" style="width: ${budgetPerc}%; background: ${budgetColor};"></div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>`;
         });
         container.innerHTML += `<div class="wallet-card add-new" onclick="addWallet()"><span style="font-size: 32px; margin-bottom: 5px;">+</span>Tambah Dompet</div>`;
     }
-    function selectWallet(id) { activeWalletId = id; renderWallets(); renderFinance(); }
-    function addWallet() { customIOSDialog({ type: 'prompt', title: 'Dompet Baru', msg: 'Masukkan nama dompet', inputs: [{ placeholder: 'Misal: BCA / Tunai' }], onConfirm: (vals) => { const n = vals[0]; if(n) { const newId = Date.now(); const newObj = { id: newId, user_id: currentUser.id, name: n }; wallets.push(newObj); localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); selectWallet(newId); supabaseClient.from('wallets').insert([newObj]).then(); }}}); }
+
+    function selectWallet(id) { 
+        if (activeWalletId !== id) isWalletExpanded = false; 
+        activeWalletId = id; 
+        renderWallets(); renderFinance(); 
+    }
+    
+    function toggleWalletExpand(event) {
+        event.stopPropagation();
+        isWalletExpanded = !isWalletExpanded;
+        renderWallets();
+    }
+
+    function addWallet() { customIOSDialog({ type: 'prompt', title: 'Dompet Baru', msg: 'Masukkan nama dompet', inputs: [{ placeholder: 'Misal: BCA / Tunai' }], onConfirm: (vals) => { const n = vals[0]; if(n) { const newId = Date.now(); const newObj = { id: newId, user_id: currentUser.id, name: n, budget: 0 }; wallets.push(newObj); localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); selectWallet(newId); supabaseClient.from('wallets').insert([newObj]).then(); }}}); }
     function editWallet(id, event) { event.stopPropagation(); const w = wallets.find(x => x.id == id); customIOSDialog({ type: 'prompt', title: 'Edit Nama Dompet', msg: 'Ubah nama dompetmu', inputs: [{ placeholder: 'Nama baru', value: w.name }], onConfirm: (vals) => { const n = vals[0]; if(n) { w.name = n; localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); renderWallets(); supabaseClient.from('wallets').update({ name: n }).eq('id', w.id).then(); }}}); }
+
+    function setWalletBudget(event) {
+        event.stopPropagation();
+        const w = wallets.find(x => x.id == activeWalletId);
+        customIOSDialog({ 
+            type: 'prompt', title: 'Batas Pengeluaran', msg: 'Set budget bulanan dompet ini', 
+            inputs: [{ placeholder: 'Nominal Rp (Misal: 2000000)', type: 'number', value: w.budget > 0 ? w.budget : '' }], 
+            onConfirm: (vals) => { 
+                const b = parseInt(vals[0]); 
+                if(!isNaN(b) && b >= 0) { 
+                    w.budget = b; 
+                    localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); 
+                    renderWallets(); 
+                    supabaseClient.from('wallets').update({ budget: b }).eq('id', w.id).then(); 
+                } 
+            }
+        });
+    }
+
+    function transferWallet(event) {
+        event.stopPropagation();
+        const availableWallets = wallets.filter(w => w.id != activeWalletId);
+        if(availableWallets.length === 0) return customIOSDialog({type: 'alert', title: 'Oops', msg: 'Kamu butuh minimal 2 dompet untuk transfer!'});
+
+        const dompetOptions = availableWallets.map(w => ({ value: w.id, label: w.name }));
+
+        customIOSDialog({ 
+            type: 'prompt', title: 'Transfer Saldo', msg: 'Pindahkan uang ke dompet lain', 
+            inputs: [
+                { placeholder: 'Nominal Rp', type: 'number' },
+                { type: 'select', options: dompetOptions }
+            ], 
+            onConfirm: async (vals) => { 
+                const amount = parseInt(vals[0]); 
+                const targetWalletId = parseInt(vals[1]);
+
+                if(!isNaN(amount) && amount > 0 && targetWalletId) { 
+                    
+                    let sourceBal = 0; 
+                    transactions.filter(t => t.walletId == activeWalletId).forEach(t => { sourceBal += t.type === 'income' ? t.amount : -t.amount; });
+                    if(amount > sourceBal) return setTimeout(() => customIOSDialog({type: 'alert', title: 'Saldo Kurang', msg: `Saldo dompet ini hanya ${formatRp(sourceBal)}.`}), 300);
+
+                    showLoader('Memproses Transfer...');
+
+                    // PERBAIKAN: Gunakan ID Unik + Insert Bergiliran Agar Database Gratisan Tidak Gagal
+                    const tsOut = Date.now();
+                    const tsIn = tsOut + 100; 
+
+                    const txOut = { id: tsOut, user_id: currentUser.id, "walletId": activeWalletId, timestamp: tsOut, name: 'Transfer Keluar', amount: amount, description: 'Ke dompet lain', type: 'expense', category: 'Transfer', icon: '⇄' };
+                    const txIn = { id: tsIn, user_id: currentUser.id, "walletId": targetWalletId, timestamp: tsIn, name: 'Transfer Masuk', amount: amount, description: 'Dari dompet lain', type: 'income', category: 'Transfer', icon: '⇄' };
+
+                    const resOut = await supabaseClient.from('transactions').insert([txOut]);
+                    const resIn = await supabaseClient.from('transactions').insert([txIn]);
+                    
+                    hideLoader();
+
+                    if (resOut.error || resIn.error) {
+                        console.error("Transfer Error:", resOut.error || resIn.error);
+                        return setTimeout(() => customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Gagal menghubungi server saat transfer.'}), 300);
+                    }
+
+                    transactions.unshift(txIn);
+                    transactions.unshift(txOut);
+                    transactions.sort((a, b) => getValidTimestamp(b.timestamp) - getValidTimestamp(a.timestamp));
+                    
+                    localStorage.setItem('zaim_tx', JSON.stringify(transactions));
+                    renderWallets(); renderFinance();
+                } else {
+                    setTimeout(() => customIOSDialog({type: 'alert', title: 'Oops', msg: 'Nominal transfer tidak valid.'}), 300);
+                }
+            }
+        });
+    }
 
     // --- CHART STATISTIK ---
     function toggleStats() {
@@ -524,7 +728,7 @@
         expenseChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 0, hoverOffset: isEmptyState ? 0 : 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false }, tooltip: { enabled: !isEmptyState, callbacks: { label: function(context) { return ' ' + context.label + ': ' + formatRp(context.raw); } }, bodyFont: { family: '-apple-system, sans-serif' }, padding: 10, backgroundColor: 'rgba(0,0,0,0.8)', cornerRadius: 8 } } } });
     }
     function renderChart() {
-        const activeTx = transactions.filter(t => t.walletId == activeWalletId && t.type === currentChartMode);
+        const activeTx = transactions.filter(t => t.walletId == activeWalletId && t.type === currentChartMode && t.category !== 'Transfer'); 
         const now = new Date(); let filteredTx = [];
         if(currentChartFilter === 'today') { const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); filteredTx = activeTx.filter(t => t.timestamp >= start); } 
         else if (currentChartFilter === 'week') { const start = new Date(now.setDate(now.getDate() - now.getDay())).setHours(0,0,0,0); filteredTx = activeTx.filter(t => t.timestamp >= start); } 
@@ -566,38 +770,70 @@
         
         let lastDay = null;
         allActiveTx.forEach(tx => {
-            const dayLabel = getDayLabel(tx.timestamp);
+            const ts = getValidTimestamp(tx.timestamp);
+            const dayLabel = getDayLabel(ts);
             if (dayLabel !== lastDay) { list.innerHTML += `<div class="day-separator">${dayLabel}</div>`; lastDay = dayLabel; }
             const descHtml = tx.description ? `<div class="item-desc">${tx.description}</div>` : '';
-            const timeOnly = new Date(getValidTimestamp(tx.timestamp)).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
+            const timeOnly = new Date(ts).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
 
             list.innerHTML += `<div class="item-row"><div class="icon-circle">${tx.icon}</div><div class="item-info"><div class="item-name">${tx.name}</div>${descHtml}<div class="item-cat">${tx.category}</div><div class="item-time">${timeOnly}</div></div><div class="item-amount" style="color: ${tx.type === 'income' ? 'var(--green)' : 'var(--text-main)'}">${tx.type === 'income' ? '+' : ''}${formatRp(tx.amount)}</div><div class="item-dots" onclick="openActionSheet(${tx.id})">⋯</div></div>`;
         });
     }
 
-    function toLocalDatetime(ts) {
-        const d = new Date(getValidTimestamp(ts));
-        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-        return d.toISOString().slice(0, 16);
+    function showModal(id) { 
+        const m = document.getElementById(id); 
+        m.style.display = 'flex'; 
+        setTimeout(() => m.classList.add('active'), 10); 
+        
+        activeModals.push(id);
+        history.pushState({ popup: id }, "");
+    }
+    
+    function closeModal(id, isFromPopState = false) { 
+        const m = document.getElementById(id); 
+        m.classList.remove('active'); 
+        setTimeout(() => m.style.display = 'none', 300); 
+
+        const index = activeModals.indexOf(id);
+        if (index > -1) {
+            activeModals.splice(index, 1);
+        }
+
+        if (isFromPopState !== true) {
+            window.__disableExitPopup = true;
+            history.back();
+        }
     }
 
     function openTxModal(editId = null) {
-        if(typeof editId === 'object') editId = null; // Cegah event object terkirim dari tombol
-        activeTxId = editId; isEditMode = false; document.getElementById('btn-edit-mode').innerText = "Edit"; document.getElementById('modal-tx-title').innerText = editId ? "Edit Transaksi" : "Transaksi Baru";
+        if(typeof editId === 'object') editId = null; 
+        activeTxId = editId; 
+        isEditMode = false; 
+        document.getElementById('btn-edit-mode').innerText = "Edit"; 
+        document.getElementById('modal-tx-title').innerText = editId ? "Edit Transaksi" : "Transaksi Baru";
         
         if(editId) {
-            const tx = transactions.find(t => t.id == editId); setTxType(tx.type); 
+            const tx = transactions.find(t => t.id == editId);
+            if(!tx) return customIOSDialog({type: 'alert', title: 'Error', msg: 'Data transaksi tidak ditemukan!'});
+            
+            setTxType(tx.type); 
             document.getElementById('tx-name').value = tx.name; 
             document.getElementById('tx-amount').value = new Intl.NumberFormat('id-ID').format(tx.amount); 
             document.getElementById('tx-desc').value = tx.description || ''; 
-            document.getElementById('tx-date').value = toLocalDatetime(tx.timestamp); 
-            selectedCat = tx.category; selectedIcon = tx.icon;
+            selectedCat = tx.category; 
+            selectedIcon = tx.icon;
         } else {
-            document.getElementById('tx-name').value = ''; document.getElementById('tx-amount').value = ''; document.getElementById('tx-desc').value = ''; 
-            document.getElementById('tx-date').value = toLocalDatetime(Date.now()); 
-            setTxType('expense'); selectedCat = customCats[0]; selectedIcon = customIcons[0];
+            document.getElementById('tx-name').value = ''; 
+            document.getElementById('tx-amount').value = ''; 
+            document.getElementById('tx-desc').value = ''; 
+            setTxType('expense'); 
+            selectedCat = customCats[0]; 
+            selectedIcon = customIcons[0];
         }
-        buildCats(); buildIcons(); showModal('modal-tx');
+
+        buildCats(); 
+        buildIcons(); 
+        showModal('modal-tx');
     }
     
     function setTxType(type) { currentTxType = type; document.getElementById('seg-expense').classList.toggle('active', type === 'expense'); document.getElementById('seg-income').classList.toggle('active', type === 'income'); }
@@ -611,49 +847,100 @@
     function addNewCat() { customIOSDialog({ type: 'prompt', title: 'Kategori Baru', msg: 'Nama kategori', inputs: [{ placeholder: 'Misal: Belanja' }], onConfirm: (vals) => { const n = vals[0]; if(n) { customCats.push(n); buildCats(); selectCat(n); updateSettingsCloud(); } }}); }
     function addNewIcon() { customIOSDialog({ type: 'prompt', title: 'Ikon Baru', msg: '1 emoji sesuai', inputs: [{ placeholder: 'Misal: 🎁' }], onConfirm: (vals) => { const i = vals[0]; if(i) { customIcons.push(i); buildIcons(); selectIcon(i); updateSettingsCloud(); } }}); }
 
-    function saveTransaction() {
-        const name = document.getElementById('tx-name').value;
-        const amountVal = document.getElementById('tx-amount').value.replace(/\D/g, '');
-        const amount = parseInt(amountVal);
-        const description = document.getElementById('tx-desc').value.trim();
-        const dateVal = document.getElementById('tx-date').value;
-        
-        // PERBAIKAN: Membaca tanggal edit dengan aman dari berbagai browser
-        let txTimestamp = Date.now();
-        if (dateVal) {
-            const parsed = new Date(dateVal).getTime();
-            if (!isNaN(parsed)) { txTimestamp = parsed; } 
-            else { 
-                const fallback = new Date(dateVal.replace('T', ' ')).getTime();
-                if (!isNaN(fallback)) txTimestamp = fallback; 
-            }
-        }
+    async function saveTransaction() {
+        try {
+            document.getElementById('modal-tx-title').innerText = "Menyimpan...";
 
-        if(!name || !amount) return customIOSDialog({type: 'alert', title: 'Oops', msg: 'Isi nama dan jumlah!'});
+            const name = document.getElementById('tx-name').value.trim();
+            const amountVal = document.getElementById('tx-amount').value.replace(/\D/g, '');
+            const amount = parseInt(amountVal);
+            const description = document.getElementById('tx-desc').value.trim() || null;
 
-        if(activeTxId) {
-            // Gunakan `==` agar cocok antara Text/Nomor
-            const idx = transactions.findIndex(t => t.id == activeTxId);
-            if(idx > -1) {
-                transactions[idx] = { ...transactions[idx], name, amount, description, timestamp: txTimestamp, type: currentTxType, category: selectedCat, icon: selectedIcon };
-                supabaseClient.from('transactions').update({ name, amount, description, timestamp: txTimestamp, type: currentTxType, category: selectedCat, icon: selectedIcon }).eq('id', activeTxId).then();
+            if(!name || isNaN(amount) || amount <= 0) {
+                document.getElementById('modal-tx-title').innerText = activeTxId ? "Edit Transaksi" : "Transaksi Baru";
+                return customIOSDialog({type: 'alert', title: 'Input Tidak Valid', msg: 'Nama dan nominal wajib diisi!'});
             }
-        } else {
-            const newTx = { id: Date.now(), user_id: currentUser.id, "walletId": activeWalletId, timestamp: txTimestamp, name, amount, description, type: currentTxType, category: selectedCat, icon: selectedIcon };
-            transactions.unshift(newTx);
-            supabaseClient.from('transactions').insert([newTx]).then();
+
+            let finalTimestamp = Date.now();
+            let existingTx = null;
+
+            if (activeTxId) {
+                const idx = transactions.findIndex(t => t.id == activeTxId);
+                if (idx === -1) {
+                    document.getElementById('modal-tx-title').innerText = "Edit Transaksi";
+                    return customIOSDialog({type: 'alert', title: 'Gagal Sistem', msg: 'Transaksi tidak ditemukan!'});
+                }
+                existingTx = transactions[idx];
+                finalTimestamp = getValidTimestamp(existingTx.timestamp); 
+            }
+
+            const transactionData = {
+                id: activeTxId ? existingTx.id : Date.now(),
+                user_id: currentUser.id,
+                "walletId": activeTxId ? existingTx.walletId : activeWalletId,
+                timestamp: finalTimestamp,
+                name: name,
+                amount: amount,
+                description: description,
+                type: currentTxType,
+                category: selectedCat || 'Lainnya',
+                icon: selectedIcon || '💸'
+            };
+
+            if (activeTxId) {
+                const { error } = await supabaseClient
+                    .from('transactions')
+                    .update({
+                        name: transactionData.name,
+                        amount: transactionData.amount,
+                        description: transactionData.description,
+                        timestamp: transactionData.timestamp,
+                        type: transactionData.type,
+                        category: transactionData.category,
+                        icon: transactionData.icon,
+                        "walletId": transactionData.walletId 
+                    })
+                    .eq('id', activeTxId);
+
+                if (error) throw error; 
+
+                const updateIdx = transactions.findIndex(t => t.id == activeTxId);
+                transactions[updateIdx] = { ...transactions[updateIdx], ...transactionData };
+
+            } else {
+                const { error } = await supabaseClient
+                    .from('transactions')
+                    .insert([transactionData]);
+
+                if (error) throw error;
+
+                transactions.unshift(transactionData);
+            }
+
+            transactions.sort((a, b) => getValidTimestamp(b.timestamp) - getValidTimestamp(a.timestamp));
+            localStorage.setItem('zaim_tx', JSON.stringify(transactions));
+            
+            renderWallets(); 
+            renderFinance(); 
+            closeModal('modal-tx', false);
+
+        } catch (error) {
+            console.error("Database Update Failed:", error);
+            customIOSDialog({
+                type: 'alert', 
+                title: 'Koneksi Gagal', 
+                msg: 'Gagal menyimpan perubahan ke server. Data dibatalkan.'
+            });
+        } finally {
+            document.getElementById('modal-tx-title').innerText = activeTxId ? "Edit Transaksi" : "Transaksi Baru";
         }
-        
-        transactions.sort((a, b) => b.timestamp - a.timestamp);
-        localStorage.setItem('zaim_tx', JSON.stringify(transactions));
-        renderWallets(); renderFinance(); closeModal('modal-tx');
     }
 
     function openActionSheet(id) { activeTxId = id; showModal('sheet-tx'); }
-    function closeActionSheet() { closeModal('sheet-tx'); }
-    function triggerEditTx() { closeActionSheet(); setTimeout(() => openTxModal(activeTxId), 300); }
+    function closeActionSheet(isFromPopState = false) { closeModal('sheet-tx', isFromPopState); }
+    function triggerEditTx() { closeActionSheet(false); setTimeout(() => openTxModal(activeTxId), 300); }
     function triggerDeleteTx() { 
-        const idToDelete = activeTxId; closeActionSheet(); 
+        const idToDelete = activeTxId; closeActionSheet(false); 
         setTimeout(() => { customIOSDialog({ type: 'confirm', title: 'Hapus Transaksi', msg: 'Yakin hapus?', onConfirm: () => { 
             const txIndex = transactions.findIndex(t => t.id == idToDelete);
             if(txIndex > -1) {
@@ -703,12 +990,9 @@
         } else if (action === 'edit') {
             customIOSDialog({ type: 'prompt', title: 'Edit Tabungan', msg: 'Ubah detail', inputs: [{ placeholder: 'Nama', value: s.name }, { placeholder: 'Target', type: 'number', value: s.target }, { placeholder: 'Ikon', value: s.icon } ], onConfirm: (vals) => { const name = vals[0]; const target = parseInt(vals[1]); const icon = vals[2]; if(name && target) { s.name = name; s.target = target; if(icon) s.icon = icon; localStorage.setItem('zaim_sav', JSON.stringify(savings)); openSavingDetail(activeSavId); renderSavings(); supabaseClient.from('savings').update({ name: s.name, target: s.target, icon: s.icon }).eq('id', s.id).then(); } } });
         } else if (action === 'delete') {
-            customIOSDialog({ type: 'confirm', title: 'Hapus Tabungan', msg: 'Yakin hapus?', onConfirm: () => { savings.splice(idx, 1); closeModal('modal-saving-detail'); localStorage.setItem('zaim_sav', JSON.stringify(savings)); renderSavings(); supabaseClient.from('savings').delete().eq('id', s.id).then(); }});
+            customIOSDialog({ type: 'confirm', title: 'Hapus Tabungan', msg: 'Yakin hapus?', onConfirm: () => { savings.splice(idx, 1); closeModal('modal-saving-detail', false); localStorage.setItem('zaim_sav', JSON.stringify(savings)); renderSavings(); supabaseClient.from('savings').delete().eq('id', s.id).then(); }});
         }
     }
-
-    function showModal(id) { const m = document.getElementById(id); m.style.display = 'flex'; setTimeout(() => m.classList.add('active'), 10); }
-    function closeModal(id) { const m = document.getElementById(id); m.classList.remove('active'); setTimeout(() => m.style.display = 'none', 300); }
 </script>
 </body>
 </html>
