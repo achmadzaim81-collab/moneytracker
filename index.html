@@ -1,10 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Zaim Finance iOS</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -20,8 +20,8 @@
         html, body { height: 100%; width: 100%; overflow: hidden; position: fixed; top: 0; left: 0; }
         body { background-color: var(--bg-body); display: flex; justify-content: center; align-items: center; }
 
-        .app-wrapper { background-color: var(--bg-ios); width: 100%; max-width: 414px; height: 100%; position: relative; display: flex; flex-direction: column; overflow: hidden; }
-        @media (min-width: 600px) { .app-wrapper { height: 90%; max-height: 896px; border-radius: 40px; box-shadow: 0 0 40px rgba(255,255,255,0.1); } }
+        .app-wrapper { background-color: var(--bg-ios); width: 100%; max-width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; overflow: hidden; margin: 0 auto; }
+        @media (min-width: 768px) { .app-wrapper { max-width: 900px; height: 100%; max-height: 100%; border-radius: 0; box-shadow: 0 0 30px rgba(0,0,0,0.8); border-left: 1px solid var(--separator); border-right: 1px solid var(--separator); } }
 
         /* Loader */
         #app-loader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-ios); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease; }
@@ -101,7 +101,7 @@
         .item-amount { font-weight: 600; text-align: right; margin-right: 10px; white-space: nowrap; }
         .item-dots { color: var(--text-sub); font-size: 20px; padding: 5px; cursor: pointer; font-weight: bold; }
 
-        .savings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .savings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
         .saving-card { background: var(--card-bg); padding: 15px 10px; border-radius: 16px; text-align: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .saving-icon { font-size: 28px; margin-bottom: 8px; }
         .saving-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;}
@@ -199,7 +199,7 @@
     <div id="app-loader">
         <div class="spinner"></div>
         <div class="loader-text" id="loader-text">Menyinkronkan Data...</div>
-        <div class="loader-sub">Supabase Database</div>
+        <div class="loader-sub">Cloud Server Terenkripsi</div>
     </div>
 
     <div id="view-finance" class="view">
@@ -347,13 +347,94 @@
 </div>
 
 <script>
-    const { createClient } = supabase;
-    const supabaseUrl = 'https://ribyhfdrhhnkqqlcnuzn.supabase.co';
-    const supabaseKey = 'sb_publishable_4kEr5JPBVJdHgyw1q_3Gvw_umGO_-RG';
-    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+    const tursoUrl = 'https://moneymanager-zaim.aws-ap-south-1.turso.io';
+    const tursoAuthToken = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzY3MDIwNTYsImlkIjoiMDE5ZGFiYjEtNWUwMS03YTdhLTllNzAtOTc3Mjk0YTA2NTRjIiwicmlkIjoiNmU1N2M0NmEtZjJhYy00NzgwLTllNDUtMjBmOGI0ZTNhNjgwIn0.yYlbQB5ZKbdXw9XkJVSvnsVKZW10qljnTC47cN-p_-oRyCkfytuAIgUK3P9oxeYoOO9Fv8SGNjXlJjZeGC4hBA';
+    
+    async function tursoDb(sql, args = []) {
+        const formattedArgs = args.map(a => {
+            if (a === null || a === undefined) return { type: 'null' };
+            if (typeof a === 'number') return { type: Number.isInteger(a) ? 'integer' : 'float', value: "" + a };
+            return { type: 'text', value: "" + a };
+        });
+        const res = await fetch(`${tursoUrl}/v2/pipeline`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${tursoAuthToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requests: [{ type: 'execute', stmt: { sql, args: formattedArgs } }] })
+        });
+        const data = await res.json();
+        if(data.results[0].type === 'error') throw new Error(data.results[0].error.message);
+        const result = data.results[0].response.result;
+        if(!result) return [];
+        return result.rows.map(r => {
+            let obj = {};
+            result.cols.forEach((c, i) => {
+                let val = r[i].value;
+                if(r[i].type === 'integer') val = parseInt(val, 10);
+                if(r[i].type === 'float') val = parseFloat(val);
+                obj[c.name] = val;
+            });
+            return obj;
+        });
+    }
+
+    async function tursoBatch(queries) {
+        const requests = queries.map(q => {
+            const formattedArgs = (q.args || []).map(a => {
+                if (a === null || a === undefined) return { type: 'null' };
+                if (typeof a === 'number') return { type: Number.isInteger(a) ? 'integer' : 'float', value: "" + a };
+                return { type: 'text', value: "" + a };
+            });
+            return { type: 'execute', stmt: { sql: q.sql, args: formattedArgs } };
+        });
+        const res = await fetch(`${tursoUrl}/v2/pipeline`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${tursoAuthToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requests })
+        });
+        const data = await res.json();
+        return data.results.map(resObj => {
+            if (resObj.type === 'error' || !resObj.response || !resObj.response.result) return [];
+            const result = resObj.response.result;
+            return result.rows.map(r => {
+                let obj = {};
+                result.cols.forEach((c, i) => {
+                    let val = r[i].value;
+                    if(r[i].type === 'integer') val = parseInt(val, 10);
+                    if(r[i].type === 'float') val = parseFloat(val);
+                    obj[c.name] = val;
+                });
+                return obj;
+            });
+        });
+    }
 
     let currentUser = JSON.parse(localStorage.getItem('zaim_user')) || null;
     let isLoginMode = true;
+
+    async function handleAuth() {
+        const user = document.getElementById('auth-username').value.trim();
+        const pass = document.getElementById('auth-password').value.trim();
+        if(!user || !pass) return customIOSDialog({type: 'alert', title: 'Oops', msg: 'Username dan Password harus diisi!'});
+        showLoader("Memproses Akun...");
+        if (isLoginMode) {
+            try {
+                const rows = await tursoDb("SELECT * FROM users WHERE username = ? AND password = ?", [user, pass]);
+                if (rows.length === 0) throw new Error();
+                loginSuccess(rows[0]);
+            } catch(e) { hideLoader(); return customIOSDialog({type: 'alert', title: 'Gagal Masuk', msg: 'Username atau Password salah.'}); }
+        } else {
+            try {
+                const existing = await tursoDb("SELECT id FROM users WHERE username = ?", [user]);
+                if (existing.length > 0) { hideLoader(); return customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Username sudah dipakai.'}); }
+                const newId = Date.now();
+                await tursoDb("INSERT INTO users (id, username, password) VALUES (?, ?, ?)", [newId, user, pass]);
+                const newUserId = newId;
+                await tursoDb("INSERT INTO wallets (id, user_id, name, budget) VALUES (?, ?, ?, ?)", [Date.now(), newUserId, 'Dompet Utama', 0]);
+                localStorage.setItem(`zaim_settings_${newUserId}`, JSON.stringify({ categories: ['🍔 Makan', '🚗 Transport', '📚 Kuliah'], icons: ['💸','🍔','🚗','📚','🎮','💰','🛒'] }));
+                loginSuccess({ id: newUserId, username: user });
+            } catch(e) { hideLoader(); return customIOSDialog({type: 'alert', title: 'Error', msg: 'Terjadi kesalahan sistem.'}); }
+        }
+    }
 
     let wallets = [], transactions = [], savings = [], customCats = [], customIcons = [];
     let activeWalletId = null, currentTxType = 'expense', selectedCat = '', selectedIcon = '💸';
@@ -442,25 +523,6 @@
         document.getElementById('btn-auth-switch').innerText = isLoginMode ? "Belum punya akun? Daftar" : "Sudah punya akun? Masuk";
     }
 
-    async function handleAuth() {
-        const user = document.getElementById('auth-username').value.trim();
-        const pass = document.getElementById('auth-password').value.trim();
-        if(!user || !pass) return customIOSDialog({type: 'alert', title: 'Oops', msg: 'Username dan Password harus diisi!'});
-        showLoader("Memproses Akun...");
-        if (isLoginMode) {
-            const { data, error } = await supabaseClient.from('users').select('*').eq('username', user).eq('password', pass).single();
-            if (error || !data) { hideLoader(); return customIOSDialog({type: 'alert', title: 'Gagal Masuk', msg: 'Username atau Password salah.'}); }
-            loginSuccess(data);
-        } else {
-            const { data: existing } = await supabaseClient.from('users').select('id').eq('username', user).single();
-            if (existing) { hideLoader(); return customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Username sudah dipakai.'}); }
-            const { data, error } = await supabaseClient.from('users').insert({ username: user, password: pass }).select().single();
-            if (error || !data) { hideLoader(); return customIOSDialog({type: 'alert', title: 'Error', msg: 'Terjadi kesalahan sistem.'}); }
-            await Promise.all([ supabaseClient.from('wallets').insert({ id: Date.now(), user_id: data.id, name: 'Dompet Utama', budget: 0 }), supabaseClient.from('user_settings').insert({ user_id: data.id, categories: ['🍔 Makan', '🚗 Transport', '📚 Kuliah'], icons: ['💸','🍔','🚗','📚','🎮','💰','🛒'] }) ]);
-            loginSuccess(data);
-        }
-    }
-
     function loginSuccess(userData) {
         currentUser = userData; localStorage.setItem('zaim_user', JSON.stringify(userData));
         document.getElementById('view-auth').style.display = 'none'; document.getElementById('app-tab-bar').style.display = 'flex'; document.getElementById('view-finance').classList.add('active');
@@ -481,23 +543,23 @@
         showLoader("Menarik Data dari Cloud...");
         try {
             const uid = currentUser.id;
-            const [wRes, sRes, tRes, cRes] = await Promise.all([
-                supabaseClient.from('wallets').select('*').eq('user_id', uid).order('id', { ascending: true }),
-                supabaseClient.from('savings').select('*').eq('user_id', uid).order('id', { ascending: true }),
-                supabaseClient.from('transactions').select('*').eq('user_id', uid).order('timestamp', { ascending: false }),
-                supabaseClient.from('user_settings').select('*').eq('user_id', uid).single()
+            const [wRes, sRes, tRes] = await tursoBatch([
+                { sql: "SELECT * FROM wallets WHERE user_id = ? ORDER BY id ASC", args: [uid] },
+                { sql: "SELECT * FROM savings WHERE user_id = ? ORDER BY id ASC", args: [uid] },
+                { sql: "SELECT * FROM transactions WHERE user_id = ? ORDER BY timestamp DESC", args: [uid] }
             ]);
 
-            wallets = (wRes.data || []).map(w => ({...w, budget: w.budget || 0}));
-            savings = sRes.data || [];
+            wallets = (wRes || []).map(w => ({...w, budget: w.budget || 0}));
+            savings = sRes || [];
             
-            transactions = (tRes.data || []).map(t => {
+            transactions = (tRes || []).map(t => {
                 t.timestamp = getValidTimestamp(t.timestamp);
                 return t;
             });
             transactions.sort((a, b) => getValidTimestamp(b.timestamp) - getValidTimestamp(a.timestamp));
             
-            if(cRes.data) { customCats = cRes.data.categories || ['🍔 Makan']; customIcons = cRes.data.icons || ['💸']; } 
+            const savedSettings = JSON.parse(localStorage.getItem(`zaim_settings_${uid}`));
+            if(savedSettings) { customCats = savedSettings.categories || ['🍔 Makan']; customIcons = savedSettings.icons || ['💸']; } 
             else { customCats = ['🍔 Makan', '🚗 Transport', '📚 Kuliah']; customIcons = ['💸','🍔','🚗','📚','🎮','💰','🛒']; }
 
             localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); localStorage.setItem('zaim_sav', JSON.stringify(savings)); localStorage.setItem('zaim_tx', JSON.stringify(transactions));
@@ -507,7 +569,7 @@
         finally { hideLoader(); }
     }
 
-    function updateSettingsCloud() { supabaseClient.from('user_settings').upsert({ user_id: currentUser.id, categories: customCats, icons: customIcons }).then(); }
+    function updateSettingsCloud() { localStorage.setItem(`zaim_settings_${currentUser.id}`, JSON.stringify({ categories: customCats, icons: customIcons })); }
 
     function customIOSDialog({ type = 'alert', title = '', msg = '', inputs = [], onConfirm }) {
         clearTimeout(iosDialogTimeout); document.getElementById('alert-title').innerText = title; document.getElementById('alert-title').style.display = title ? 'block' : 'none';
@@ -632,8 +694,8 @@
         renderWallets();
     }
 
-    function addWallet() { customIOSDialog({ type: 'prompt', title: 'Dompet Baru', msg: 'Masukkan nama dompet', inputs: [{ placeholder: 'Misal: BCA / Tunai' }], onConfirm: (vals) => { const n = vals[0]; if(n) { const newId = Date.now(); const newObj = { id: newId, user_id: currentUser.id, name: n, budget: 0 }; wallets.push(newObj); localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); selectWallet(newId); supabaseClient.from('wallets').insert([newObj]).then(); }}}); }
-    function editWallet(id, event) { event.stopPropagation(); const w = wallets.find(x => x.id == id); customIOSDialog({ type: 'prompt', title: 'Edit Nama Dompet', msg: 'Ubah nama dompetmu', inputs: [{ placeholder: 'Nama baru', value: w.name }], onConfirm: (vals) => { const n = vals[0]; if(n) { w.name = n; localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); renderWallets(); supabaseClient.from('wallets').update({ name: n }).eq('id', w.id).then(); }}}); }
+    function addWallet() { customIOSDialog({ type: 'prompt', title: 'Dompet Baru', msg: 'Masukkan nama dompet', inputs: [{ placeholder: 'Misal: BCA / Tunai' }], onConfirm: (vals) => { const n = vals[0]; if(n) { const newId = Date.now(); const newObj = { id: newId, user_id: currentUser.id, name: n, budget: 0 }; wallets.push(newObj); localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); selectWallet(newId); tursoDb("INSERT INTO wallets (id, user_id, name, budget) VALUES (?, ?, ?, ?)", [newObj.id, newObj.user_id, newObj.name, newObj.budget]).catch(console.error); }}}); }
+    function editWallet(id, event) { event.stopPropagation(); const w = wallets.find(x => x.id == id); customIOSDialog({ type: 'prompt', title: 'Edit Nama Dompet', msg: 'Ubah nama dompetmu', inputs: [{ placeholder: 'Nama baru', value: w.name }], onConfirm: (vals) => { const n = vals[0]; if(n) { w.name = n; localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); renderWallets(); tursoDb("UPDATE wallets SET name = ? WHERE id = ?", [n, w.id]).catch(console.error); }}}); }
 
     function setWalletBudget(event) {
         event.stopPropagation();
@@ -647,7 +709,7 @@
                     w.budget = b; 
                     localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); 
                     renderWallets(); 
-                    supabaseClient.from('wallets').update({ budget: b }).eq('id', w.id).then(); 
+                    tursoDb("UPDATE wallets SET budget = ? WHERE id = ?", [b, w.id]).catch(console.error); 
                 } 
             }
         });
@@ -685,13 +747,14 @@
                     const txOut = { id: tsOut, user_id: currentUser.id, "walletId": activeWalletId, timestamp: tsOut, name: 'Transfer Keluar', amount: amount, description: 'Ke dompet lain', type: 'expense', category: 'Transfer', icon: '⇄' };
                     const txIn = { id: tsIn, user_id: currentUser.id, "walletId": targetWalletId, timestamp: tsIn, name: 'Transfer Masuk', amount: amount, description: 'Dari dompet lain', type: 'income', category: 'Transfer', icon: '⇄' };
 
-                    const resOut = await supabaseClient.from('transactions').insert([txOut]);
-                    const resIn = await supabaseClient.from('transactions').insert([txIn]);
+                    let errOut = false, errIn = false;
+                    try { await tursoDb("INSERT INTO transactions (id, user_id, walletId, timestamp, name, amount, description, type, category, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [txOut.id, txOut.user_id, txOut.walletId, txOut.timestamp, txOut.name, txOut.amount, txOut.description, txOut.type, txOut.category, txOut.icon]); } catch(e) { errOut = true; }
+                    try { await tursoDb("INSERT INTO transactions (id, user_id, walletId, timestamp, name, amount, description, type, category, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [txIn.id, txIn.user_id, txIn.walletId, txIn.timestamp, txIn.name, txIn.amount, txIn.description, txIn.type, txIn.category, txIn.icon]); } catch(e) { errIn = true; }
                     
                     hideLoader();
 
-                    if (resOut.error || resIn.error) {
-                        console.error("Transfer Error:", resOut.error || resIn.error);
+                    if (errOut || errIn) {
+                        console.error("Transfer Error");
                         return setTimeout(() => customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Gagal menghubungi server saat transfer.'}), 300);
                     }
 
@@ -816,19 +879,17 @@
             const tx = transactions.find(t => t.id == editId);
             if(!tx) return customIOSDialog({type: 'alert', title: 'Error', msg: 'Data transaksi tidak ditemukan!'});
             
+            selectedCat = tx.category; 
+            selectedIcon = tx.icon;
             setTxType(tx.type); 
             document.getElementById('tx-name').value = tx.name; 
             document.getElementById('tx-amount').value = new Intl.NumberFormat('id-ID').format(tx.amount); 
             document.getElementById('tx-desc').value = tx.description || ''; 
-            selectedCat = tx.category; 
-            selectedIcon = tx.icon;
         } else {
             document.getElementById('tx-name').value = ''; 
             document.getElementById('tx-amount').value = ''; 
             document.getElementById('tx-desc').value = ''; 
             setTxType('expense'); 
-            selectedCat = customCats[0]; 
-            selectedIcon = customIcons[0];
         }
 
         buildCats(); 
@@ -836,10 +897,45 @@
         showModal('modal-tx');
     }
     
-    function setTxType(type) { currentTxType = type; document.getElementById('seg-expense').classList.toggle('active', type === 'expense'); document.getElementById('seg-income').classList.toggle('active', type === 'income'); }
+    function setTxType(type) { 
+        currentTxType = type; 
+        document.getElementById('seg-expense').classList.toggle('active', type === 'expense'); 
+        document.getElementById('seg-income').classList.toggle('active', type === 'income'); 
+        
+        if (!activeTxId && !isEditMode) {
+            document.getElementById('tx-name').value = ''; 
+            document.getElementById('tx-amount').value = ''; 
+            document.getElementById('tx-desc').value = '';
+        }
+
+        if (type === 'expense') {
+            document.getElementById('tx-name').placeholder = "Misal: Kopi";
+            document.getElementById('tx-desc').placeholder = "Opsional (mis: Traktir teman)";
+            if (!activeTxId && !isEditMode) {
+                selectedIcon = customIcons.includes('💸') ? '💸' : customIcons[0];
+                selectedCat = customCats[0] || 'Lainnya';
+            }
+        } else {
+            document.getElementById('tx-name').placeholder = "Misal: Uang Saku / Gaji";
+            document.getElementById('tx-desc').placeholder = "Opsional (mis: Dari Orang Tua / Klien)";
+            if (!activeTxId && !isEditMode) {
+                selectedIcon = '💰';
+                selectedCat = 'Gaji';
+            }
+        }
+        buildCats(); buildIcons();
+    }
     function toggleEditMode() { isEditMode = !isEditMode; document.getElementById('btn-edit-mode').innerText = isEditMode ? "Selesai" : "Edit"; buildCats(); buildIcons(); }
-    function buildCats() { document.getElementById('cat-container').innerHTML = customCats.map((c, idx) => `<div class="chip ${c === selectedCat ? 'active' : ''}" onclick="selectCat('${c}')">${c}${isEditMode ? `<div class="delete-badge" onclick="deleteCat(${idx}, event)">✕</div>` : ''}</div>`).join('') + (!isEditMode ? `<div class="chip chip-add" onclick="addNewCat()">+ Tambah</div>` : ''); }
-    function buildIcons() { document.getElementById('icon-container').innerHTML = customIcons.map((i, idx) => `<div class="icon-opt ${i === selectedIcon ? 'active' : ''}" onclick="selectIcon('${i}')">${i}${isEditMode ? `<div class="delete-badge" onclick="deleteIcon(${idx}, event)">✕</div>` : ''}</div>`).join('') + (!isEditMode ? `<div class="icon-opt icon-add" onclick="addNewIcon()">+</div>` : ''); }
+    function buildCats() { 
+        let list = currentTxType === 'income' ? ['Gaji', 'Bonus', 'Sangu', 'Lainnya'] : customCats;
+        if (currentTxType === 'income' && selectedCat && !list.includes(selectedCat)) list.push(selectedCat);
+        document.getElementById('cat-container').innerHTML = list.map((c, idx) => `<div class="chip ${c === selectedCat ? 'active' : ''}" onclick="selectCat('${c}')">${c}${isEditMode && currentTxType === 'expense' ? `<div class="delete-badge" onclick="deleteCat(${idx}, event)">✕</div>` : ''}</div>`).join('') + (!isEditMode && currentTxType === 'expense' ? `<div class="chip chip-add" onclick="addNewCat()">+ Tambah</div>` : ''); 
+    }
+    function buildIcons() { 
+        let list = currentTxType === 'income' ? ['💰', '💵', '🏧', '🎁', '🏦'] : customIcons;
+        if (currentTxType === 'income' && selectedIcon && !list.includes(selectedIcon)) list.push(selectedIcon);
+        document.getElementById('icon-container').innerHTML = list.map((i, idx) => `<div class="icon-opt ${i === selectedIcon ? 'active' : ''}" onclick="selectIcon('${i}')">${i}${isEditMode && currentTxType === 'expense' ? `<div class="delete-badge" onclick="deleteIcon(${idx}, event)">✕</div>` : ''}</div>`).join('') + (!isEditMode && currentTxType === 'expense' ? `<div class="icon-opt icon-add" onclick="addNewIcon()">+</div>` : ''); 
+    }
     function deleteCat(idx, event) { event.stopPropagation(); customIOSDialog({ type: 'confirm', title: 'Hapus', msg: 'Yakin hapus kategori?', onConfirm: () => { if(selectedCat === customCats[idx]) selectedCat = customCats[0] || ''; customCats.splice(idx, 1); buildCats(); updateSettingsCloud(); }}); }
     function deleteIcon(idx, event) { event.stopPropagation(); customIOSDialog({ type: 'confirm', title: 'Hapus', msg: 'Yakin hapus ikon?', onConfirm: () => { if(selectedIcon === customIcons[idx]) selectedIcon = customIcons[0] || ''; customIcons.splice(idx, 1); buildIcons(); updateSettingsCloud(); }}); }
     function selectCat(c) { if(!isEditMode) { selectedCat = c; buildCats(); } }
@@ -888,31 +984,19 @@
             };
 
             if (activeTxId) {
-                const { error } = await supabaseClient
-                    .from('transactions')
-                    .update({
-                        name: transactionData.name,
-                        amount: transactionData.amount,
-                        description: transactionData.description,
-                        timestamp: transactionData.timestamp,
-                        type: transactionData.type,
-                        category: transactionData.category,
-                        icon: transactionData.icon,
-                        "walletId": transactionData.walletId 
-                    })
-                    .eq('id', activeTxId);
-
-                if (error) throw error; 
+                await tursoDb(
+                    "UPDATE transactions SET name = ?, amount = ?, description = ?, timestamp = ?, type = ?, category = ?, icon = ?, walletId = ? WHERE id = ?",
+                    [transactionData.name, transactionData.amount, transactionData.description, transactionData.timestamp, transactionData.type, transactionData.category, transactionData.icon, transactionData.walletId, activeTxId]
+                );
 
                 const updateIdx = transactions.findIndex(t => t.id == activeTxId);
                 transactions[updateIdx] = { ...transactions[updateIdx], ...transactionData };
 
             } else {
-                const { error } = await supabaseClient
-                    .from('transactions')
-                    .insert([transactionData]);
-
-                if (error) throw error;
+                await tursoDb(
+                    "INSERT INTO transactions (id, user_id, walletId, timestamp, name, amount, description, type, category, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [transactionData.id, transactionData.user_id, transactionData.walletId, transactionData.timestamp, transactionData.name, transactionData.amount, transactionData.description, transactionData.type, transactionData.category, transactionData.icon]
+                );
 
                 transactions.unshift(transactionData);
             }
@@ -949,11 +1033,11 @@
                     const sav = savings.find(s => s.id == tx.savingsId);
                     if(sav) {
                         if(tx.type === 'expense') sav.current -= tx.amount; if(tx.type === 'income') sav.current += tx.amount;  
-                        localStorage.setItem('zaim_sav', JSON.stringify(savings)); supabaseClient.from('savings').update({ current: sav.current }).eq('id', sav.id).then();
+                        localStorage.setItem('zaim_sav', JSON.stringify(savings)); tursoDb("UPDATE savings SET current = ? WHERE id = ?", [sav.current, sav.id]).catch(console.error);
                         if(document.getElementById('modal-saving-detail').classList.contains('active')) openSavingDetail(activeSavId);
                     }
                 }
-                transactions.splice(txIndex, 1); localStorage.setItem('zaim_tx', JSON.stringify(transactions)); supabaseClient.from('transactions').delete().eq('id', idToDelete).then();
+                transactions.splice(txIndex, 1); localStorage.setItem('zaim_tx', JSON.stringify(transactions)); tursoDb("DELETE FROM transactions WHERE id = ?", [idToDelete]).catch(console.error);
                 renderWallets(); renderFinance(); renderSavings(); 
             } }}); }, 300); 
     }
@@ -965,7 +1049,7 @@
         grid.innerHTML += `<div class="saving-add-btn" onclick="addNewSaving()">+</div>`;
     }
 
-    function addNewSaving() { customIOSDialog({ type: 'prompt', title: 'Target Baru', msg: 'Detail tabunganmu', inputs: [{ placeholder: 'Nama (Misal: Laptop)' }, { placeholder: 'Target Rp', type: 'number' }, { placeholder: 'Emoji (Misal: 💻)' }], onConfirm: (vals) => { const name = vals[0], target = parseInt(vals[1]), icon = vals[2] || '🎯'; if(name && target) { const newObj = { id: Date.now(), user_id: currentUser.id, name, target, current: 0, icon }; savings.push(newObj); localStorage.setItem('zaim_sav', JSON.stringify(savings)); renderSavings(); supabaseClient.from('savings').insert([newObj]).then(); } else { customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Isi nama dan target!'}); } } }); }
+    function addNewSaving() { customIOSDialog({ type: 'prompt', title: 'Target Baru', msg: 'Detail tabunganmu', inputs: [{ placeholder: 'Nama (Misal: Laptop)' }, { placeholder: 'Target Rp', type: 'number' }, { placeholder: 'Emoji (Misal: 💻)' }], onConfirm: (vals) => { const name = vals[0], target = parseInt(vals[1]), icon = vals[2] || '🎯'; if(name && target) { const newObj = { id: Date.now(), user_id: currentUser.id, name, target, current: 0, icon }; savings.push(newObj); localStorage.setItem('zaim_sav', JSON.stringify(savings)); renderSavings(); tursoDb("INSERT INTO savings (id, user_id, name, target, current, icon) VALUES (?, ?, ?, ?, ?, ?)", [newObj.id, newObj.user_id, newObj.name, newObj.target, newObj.current, newObj.icon]).catch(console.error); } else { customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Isi nama dan target!'}); } } }); }
     function toggleSavHist() { isSavHistOpen = !isSavHistOpen; document.getElementById('sav-hist-container').style.display = isSavHistOpen ? 'block' : 'none'; document.getElementById('sav-hist-arrow').style.transform = isSavHistOpen ? 'rotate(180deg)' : 'rotate(0deg)'; }
 
     function renderSavHistory(sId) {
@@ -984,13 +1068,13 @@
     function savingAction(action) {
         const idx = savings.findIndex(x => x.id == activeSavId); const s = savings[idx]; const dompetOptions = wallets.map(w => ({ value: w.id, label: w.name }));
         if(action === 'add') {
-            customIOSDialog({ type: 'prompt', title: 'Nabung Masuk', msg: 'Ambil dari mana?', inputs: [{ placeholder: 'Nominal', type: 'number' }, { type: 'select', options: dompetOptions }], onConfirm: (vals) => { const val = parseInt(vals[0]); const wId = parseInt(vals[1]); if(!isNaN(val) && val > 0 && wId) { let wBal = 0; transactions.filter(t => t.walletId == wId).forEach(t => { wBal += t.type === 'income' ? t.amount : -t.amount; }); if(val > wBal) { return setTimeout(() => { customIOSDialog({type: 'alert', title: 'Gagal', msg: `Saldo tidak cukup.`}); }, 50); } s.current += val; const newTx = { id: Date.now(), user_id: currentUser.id, "walletId": wId, "savingsId": s.id, timestamp: Date.now(), name: `Tabungan - ${s.name}`, amount: val, description: 'Dana Masuk', type: 'expense', category: 'Tabungan', icon: '🎯' }; transactions.unshift(newTx); localStorage.setItem('zaim_tx', JSON.stringify(transactions)); supabaseClient.from('savings').update({ current: s.current }).eq('id', s.id).then(); supabaseClient.from('transactions').insert([newTx]).then(); localStorage.setItem('zaim_sav', JSON.stringify(savings)); openSavingDetail(activeSavId); renderSavings(); renderWallets(); renderFinance(); } } });
+            customIOSDialog({ type: 'prompt', title: 'Nabung Masuk', msg: 'Ambil dari mana?', inputs: [{ placeholder: 'Nominal', type: 'number' }, { type: 'select', options: dompetOptions }], onConfirm: (vals) => { const val = parseInt(vals[0]); const wId = parseInt(vals[1]); if(!isNaN(val) && val > 0 && wId) { let wBal = 0; transactions.filter(t => t.walletId == wId).forEach(t => { wBal += t.type === 'income' ? t.amount : -t.amount; }); if(val > wBal) { return setTimeout(() => { customIOSDialog({type: 'alert', title: 'Gagal', msg: `Saldo tidak cukup.`}); }, 50); } s.current += val; const newTx = { id: Date.now(), user_id: currentUser.id, "walletId": wId, "savingsId": s.id, timestamp: Date.now(), name: `Tabungan - ${s.name}`, amount: val, description: 'Dana Masuk', type: 'expense', category: 'Tabungan', icon: '🎯' }; transactions.unshift(newTx); localStorage.setItem('zaim_tx', JSON.stringify(transactions)); tursoDb("UPDATE savings SET current = ? WHERE id = ?", [s.current, s.id]).catch(console.error); tursoDb("INSERT INTO transactions (id, user_id, walletId, savingsId, timestamp, name, amount, description, type, category, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [newTx.id, newTx.user_id, newTx.walletId, newTx.savingsId, newTx.timestamp, newTx.name, newTx.amount, newTx.description, newTx.type, newTx.category, newTx.icon]).catch(console.error); localStorage.setItem('zaim_sav', JSON.stringify(savings)); openSavingDetail(activeSavId); renderSavings(); renderWallets(); renderFinance(); } } });
         } else if (action === 'withdraw') {
-            customIOSDialog({ type: 'prompt', title: 'Tarik Tabungan', msg: 'Cair ke mana?', inputs: [{ placeholder: 'Nominal', type: 'number' }, { type: 'select', options: dompetOptions }], onConfirm: (vals) => { const val = parseInt(vals[0]); const wId = parseInt(vals[1]); if(!isNaN(val) && val > 0 && val <= s.current && wId) { s.current -= val; const newTx = { id: Date.now(), user_id: currentUser.id, "walletId": wId, "savingsId": s.id, timestamp: Date.now(), name: `Cair - ${s.name}`, amount: val, description: 'Dana Keluar', type: 'income', category: 'Tabungan', icon: '🎯' }; transactions.unshift(newTx); localStorage.setItem('zaim_tx', JSON.stringify(transactions)); supabaseClient.from('savings').update({ current: s.current }).eq('id', s.id).then(); supabaseClient.from('transactions').insert([newTx]).then(); localStorage.setItem('zaim_sav', JSON.stringify(savings)); openSavingDetail(activeSavId); renderSavings(); renderWallets(); renderFinance(); } else if (val > s.current) { customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Saldo tidak cukup!'}); } } });
+            customIOSDialog({ type: 'prompt', title: 'Tarik Tabungan', msg: 'Cair ke mana?', inputs: [{ placeholder: 'Nominal', type: 'number' }, { type: 'select', options: dompetOptions }], onConfirm: (vals) => { const val = parseInt(vals[0]); const wId = parseInt(vals[1]); if(!isNaN(val) && val > 0 && val <= s.current && wId) { s.current -= val; const newTx = { id: Date.now(), user_id: currentUser.id, "walletId": wId, "savingsId": s.id, timestamp: Date.now(), name: `Cair - ${s.name}`, amount: val, description: 'Dana Keluar', type: 'income', category: 'Tabungan', icon: '🎯' }; transactions.unshift(newTx); localStorage.setItem('zaim_tx', JSON.stringify(transactions)); tursoDb("UPDATE savings SET current = ? WHERE id = ?", [s.current, s.id]).catch(console.error); tursoDb("INSERT INTO transactions (id, user_id, walletId, savingsId, timestamp, name, amount, description, type, category, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [newTx.id, newTx.user_id, newTx.walletId, newTx.savingsId, newTx.timestamp, newTx.name, newTx.amount, newTx.description, newTx.type, newTx.category, newTx.icon]).catch(console.error); localStorage.setItem('zaim_sav', JSON.stringify(savings)); openSavingDetail(activeSavId); renderSavings(); renderWallets(); renderFinance(); } else if (val > s.current) { customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Saldo tidak cukup!'}); } } });
         } else if (action === 'edit') {
-            customIOSDialog({ type: 'prompt', title: 'Edit Tabungan', msg: 'Ubah detail', inputs: [{ placeholder: 'Nama', value: s.name }, { placeholder: 'Target', type: 'number', value: s.target }, { placeholder: 'Ikon', value: s.icon } ], onConfirm: (vals) => { const name = vals[0]; const target = parseInt(vals[1]); const icon = vals[2]; if(name && target) { s.name = name; s.target = target; if(icon) s.icon = icon; localStorage.setItem('zaim_sav', JSON.stringify(savings)); openSavingDetail(activeSavId); renderSavings(); supabaseClient.from('savings').update({ name: s.name, target: s.target, icon: s.icon }).eq('id', s.id).then(); } } });
+            customIOSDialog({ type: 'prompt', title: 'Edit Tabungan', msg: 'Ubah detail', inputs: [{ placeholder: 'Nama', value: s.name }, { placeholder: 'Target', type: 'number', value: s.target }, { placeholder: 'Ikon', value: s.icon } ], onConfirm: (vals) => { const name = vals[0]; const target = parseInt(vals[1]); const icon = vals[2]; if(name && target) { s.name = name; s.target = target; if(icon) s.icon = icon; localStorage.setItem('zaim_sav', JSON.stringify(savings)); openSavingDetail(activeSavId); renderSavings(); tursoDb("UPDATE savings SET name = ?, target = ?, icon = ? WHERE id = ?", [s.name, s.target, s.icon, s.id]).catch(console.error); } } });
         } else if (action === 'delete') {
-            customIOSDialog({ type: 'confirm', title: 'Hapus Tabungan', msg: 'Yakin hapus?', onConfirm: () => { savings.splice(idx, 1); closeModal('modal-saving-detail', false); localStorage.setItem('zaim_sav', JSON.stringify(savings)); renderSavings(); supabaseClient.from('savings').delete().eq('id', s.id).then(); }});
+            customIOSDialog({ type: 'confirm', title: 'Hapus Tabungan', msg: 'Yakin hapus?', onConfirm: () => { savings.splice(idx, 1); closeModal('modal-saving-detail', false); localStorage.setItem('zaim_sav', JSON.stringify(savings)); renderSavings(); tursoDb("DELETE FROM savings WHERE id = ?", [s.id]).catch(console.error); }});
         }
     }
 </script>
