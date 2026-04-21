@@ -27,6 +27,8 @@
         #app-loader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-ios); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease; }
         .spinner { width: 40px; height: 40px; border: 4px solid var(--separator); border-top-color: var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        .skeleton { background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 10px; }
+        @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .loader-text { font-size: 15px; font-weight: 600; color: var(--text-main); }
         .loader-sub { font-size: 13px; color: var(--text-sub); margin-top: 5px; }
 
@@ -108,12 +110,17 @@
         .saving-progress-text { font-size: 11px; color: var(--blue); font-weight: 700;}
         .saving-add-btn { background: #E5E5EA; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--text-sub); cursor: pointer; min-height: 100px; }
 
-        .tab-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--safe-bottom); background: rgba(242,242,247,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--separator); display: flex; justify-content: space-around; padding-top: 10px; z-index: 50; }
-        .tab-item { text-align: center; color: var(--text-sub); cursor: pointer; font-size: 10px; font-weight: 500; }
-        .tab-item.active { color: var(--blue); }
-        .tab-icon { font-size: 24px; display: block; margin-bottom: 2px; }
+        .tab-bar { position: absolute; bottom: calc(env(safe-area-inset-bottom, 15px) + 15px); left: 50%; transform: translateX(-50%); width: calc(100% - 60px); max-width: 320px; height: 65px; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); border: 1px solid rgba(255,255,255,0.6); border-radius: 35px; display: flex; justify-content: space-around; align-items: center; padding: 0 10px; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .tab-bar.minimized { width: 100px; height: 5px; bottom: calc(env(safe-area-inset-bottom, 10px) + 10px); padding: 0; background: rgba(0,0,0,0.25); border: none; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; border-radius: 5px; cursor: pointer; }
+        .tab-bar.minimized .tab-item { opacity: 0; transform: scale(0.5); pointer-events: none; transition: all 0.2s; }
+        .tab-item { flex: 1; text-align: center; color: var(--text-sub); cursor: pointer; font-size: 11px; font-weight: 600; padding: 6px 0; border-radius: 20px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .tab-item:hover { background: rgba(255,255,255,0.5); transform: translateY(-3px) scale(1.05); }
+        .tab-item:active { transform: translateY(2px) scale(0.95); }
+        .tab-item.active { color: var(--blue); transform: scale(1.1); }
+        .tab-icon { font-size: 22px; display: block; margin-bottom: 2px; transition: transform 0.3s ease; }
+        .tab-item.active .tab-icon { transform: translateY(-2px); }
         
-        .fab { position: absolute; bottom: calc(var(--safe-bottom) + 15px); right: 20px; width: 56px; height: 56px; background: var(--blue); color: white; border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 300; box-shadow: 0 4px 15px rgba(0,122,255,0.4); cursor: pointer; z-index: 40; }
+        .fab { position: absolute; bottom: calc(var(--safe-bottom) + 35px); right: 20px; width: 56px; height: 56px; background: var(--blue); color: white; border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 300; box-shadow: 0 4px 15px rgba(0,122,255,0.4); cursor: pointer; z-index: 40; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(3px); z-index: 100; display: none; justify-content: center; align-items: flex-end; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.active { display: flex; opacity: 1; }
@@ -206,12 +213,19 @@
         <div class="static-header">
             <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px;">
                 <h1>Keuangan</h1>
-                <div onclick="logout()" style="font-size: 24px; cursor: pointer; background: var(--card-bg); width: 36px; height: 36px; border-radius: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">👤</div>
+                <div onclick="openProfile()" style="font-size: 24px; cursor: pointer; background: var(--card-bg); width: 36px; height: 36px; border-radius: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">👤</div>
+            </div>
+            <div style="padding: 0 20px 15px;">
+                <p style="font-size: 13px; color: var(--text-sub); font-weight: 500;">Total Aset Saya</p>
+                <h2 id="total-assets" style="font-size: 28px; font-weight: 800; letter-spacing: -1px;">Rp 0</h2>
             </div>
             <div id="wallet-scroll-container" class="wallet-scroll"></div>
         </div>
         
         <div class="scroll-content">
+            <div style="padding: 0 0 15px 0;">
+                <input type="text" id="search-tx" placeholder="🔍 Cari transaksi..." style="width:100%; padding: 12px 15px; border-radius: 12px; border:none; background:white; font-size:15px; outline:none; box-shadow: 0 2px 8px rgba(0,0,0,0.04);" oninput="renderFinance()">
+            </div>
             
             <div class="section-header-toggle" id="stats-header" onclick="toggleStats()" style="display: none;">
                 <span>Statistik</span>
@@ -272,6 +286,11 @@
                 <div class="input-group">
                     <div class="form-row"><label>Nama</label><input type="text" id="tx-name" placeholder="Misal: Kopi" autocomplete="off"></div>
                     <div class="form-row"><label>Jumlah</label><input type="tel" id="tx-amount" placeholder="0" oninput="formatRupiahInput(this)" autocomplete="off"></div>
+                    <div class="form-row" style="cursor: pointer;" onclick="openWalletSelector()">
+                        <label>Dompet</label>
+                        <div id="tx-wallet-display" style="flex:1; font-size:16px; color:var(--blue); text-align:right; padding-right: 5px; font-weight: 500;">Pilih Dompet</div>
+                        <input type="hidden" id="tx-wallet">
+                    </div>
                     <div class="form-row"><label>Catatan</label><input type="text" id="tx-desc" placeholder="Opsional (mis: Traktir teman)" autocomplete="off"></div>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; margin-bottom: 5px;">
@@ -327,6 +346,25 @@
                     <button class="menu-item" onclick="savingAction('edit')">✏️ Edit Tabungan</button>
                     <button class="menu-item" style="color: var(--red);" onclick="savingAction('delete')">🗑️ Hapus Tabungan</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-profile" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-profile')">
+        <div class="action-sheet-menu">
+            <div class="action-group" style="background: rgba(255,255,255,0.95); padding: 30px 20px; text-align: center;">
+                <div style="font-size: 65px; margin-bottom: 10px;">👤</div>
+                <h2 id="prof-username" style="margin-bottom: 5px; color: var(--text-main); font-weight: 700;">Username</h2>
+                <div style="font-size: 15px; color: var(--text-sub); margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                    Password: <span id="prof-password" style="font-family: monospace; background: #E5E5EA; padding: 4px 10px; border-radius: 8px; color: var(--text-main); font-weight: 600; letter-spacing: 2px;">••••••••</span>
+                    <span id="prof-vis-btn" onclick="togglePasswordVis()" style="color: var(--blue); cursor: pointer; font-size: 13px; font-weight: 600; padding: 5px;">Lihat</span>
+                </div>
+            </div>
+            <div class="action-group">
+                <button class="action-btn danger bold" onclick="logout()">Log Out Akun</button>
+            </div>
+            <div class="action-group">
+                <button class="action-btn bold" onclick="closeModal('modal-profile')">Tutup</button>
             </div>
         </div>
     </div>
@@ -431,12 +469,27 @@
                 const newUserId = newId;
                 await tursoDb("INSERT INTO wallets (id, user_id, name, budget) VALUES (?, ?, ?, ?)", [Date.now(), newUserId, 'Dompet Utama', 0]);
                 localStorage.setItem(`zaim_settings_${newUserId}`, JSON.stringify({ categories: ['🍔 Makan', '🚗 Transport', '📚 Kuliah'], icons: ['💸','🍔','🚗','📚','🎮','💰','🛒'] }));
-                loginSuccess({ id: newUserId, username: user });
+                loginSuccess({ id: newUserId, username: user, password: pass });
             } catch(e) { hideLoader(); return customIOSDialog({type: 'alert', title: 'Error', msg: 'Terjadi kesalahan sistem.'}); }
         }
     }
 
-    let wallets = [], transactions = [], savings = [], customCats = [], customIcons = [];
+    let isPassVisible = false;
+    function openProfile() {
+        document.getElementById('prof-username').innerText = currentUser.username || 'User';
+        document.getElementById('prof-password').innerText = '••••••••';
+        document.getElementById('prof-vis-btn').innerText = 'Lihat';
+        isPassVisible = false;
+        showModal('modal-profile');
+    }
+    function togglePasswordVis() {
+        isPassVisible = !isPassVisible;
+        document.getElementById('prof-password').innerText = isPassVisible ? (currentUser.password || 'Tidak tersimpan') : '••••••••';
+        document.getElementById('prof-password').style.letterSpacing = isPassVisible ? 'normal' : '2px';
+        document.getElementById('prof-vis-btn').innerText = isPassVisible ? 'Sembunyikan' : 'Lihat';
+    }
+
+    let wallets = [], transactions = [], savings = [], customCats = [], customIcons = [], customCatsIncome = [], customIconsIncome = [];
     let activeWalletId = null, currentTxType = 'expense', selectedCat = '', selectedIcon = '💸';
     let activeTxId = null, activeSavId = null, isEditMode = false, isSavHistOpen = false;
     let iosDialogTimeout;
@@ -510,9 +563,26 @@
     }
 
     // --- AUTHENTICATION ---
+    let lastScrollTop = 0;
+    let isNavHidden = false;
+    function handleScroll(e) {
+        const currentScroll = e.target.scrollTop;
+        const navBar = document.getElementById('app-tab-bar');
+        if (currentScroll > lastScrollTop && currentScroll > 15) {
+            if (!isNavHidden) { navBar.classList.add('minimized'); isNavHidden = true; }
+        } else if (currentScroll < lastScrollTop) {
+            if (isNavHidden) { navBar.classList.remove('minimized'); isNavHidden = false; }
+        }
+        lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
         if (!currentUser) document.getElementById('view-auth').style.display = 'flex';
         else { document.getElementById('view-auth').style.display = 'none'; document.getElementById('app-tab-bar').style.display = 'flex'; document.getElementById('view-finance').classList.add('active'); initData(); }
+        
+        document.querySelectorAll('.scroll-content').forEach(el => {
+            el.addEventListener('scroll', handleScroll, { passive: true });
+        });
     });
 
     function toggleAuthMode() {
@@ -536,6 +606,7 @@
         }});
     }
 
+    function triggerHaptic() { if (window.navigator && window.navigator.vibrate) { window.navigator.vibrate(15); } }
     function showLoader(text = "Menyinkronkan Data...") { document.getElementById('loader-text').innerText = text; const loader = document.getElementById('app-loader'); loader.style.display = 'flex'; setTimeout(() => loader.style.opacity = '1', 10); }
     function hideLoader() { const loader = document.getElementById('app-loader'); loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 300); }
 
@@ -559,8 +630,17 @@
             transactions.sort((a, b) => getValidTimestamp(b.timestamp) - getValidTimestamp(a.timestamp));
             
             const savedSettings = JSON.parse(localStorage.getItem(`zaim_settings_${uid}`));
-            if(savedSettings) { customCats = savedSettings.categories || ['🍔 Makan']; customIcons = savedSettings.icons || ['💸']; } 
-            else { customCats = ['🍔 Makan', '🚗 Transport', '📚 Kuliah']; customIcons = ['💸','🍔','🚗','📚','🎮','💰','🛒']; }
+            if(savedSettings) { 
+                customCats = savedSettings.categories || ['🍔 Makan']; 
+                customIcons = savedSettings.icons || ['💸']; 
+                customCatsIncome = savedSettings.categoriesIncome || ['Gaji', 'Bonus', 'Sangu', 'Lainnya'];
+                customIconsIncome = savedSettings.iconsIncome || ['💰', '💵', '🏧', '🎁', '🏦'];
+            } else { 
+                customCats = ['🍔 Makan', '🚗 Transport', '📚 Kuliah']; 
+                customIcons = ['💸','🍔','🚗','📚','🎮','🛒']; 
+                customCatsIncome = ['Gaji', 'Bonus', 'Sangu', 'Lainnya'];
+                customIconsIncome = ['💰', '💵', '🏧', '🎁', '🏦'];
+            }
 
             localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); localStorage.setItem('zaim_sav', JSON.stringify(savings)); localStorage.setItem('zaim_tx', JSON.stringify(transactions));
             if(wallets.length > 0) activeWalletId = wallets[0].id;
@@ -569,7 +649,7 @@
         finally { hideLoader(); }
     }
 
-    function updateSettingsCloud() { localStorage.setItem(`zaim_settings_${currentUser.id}`, JSON.stringify({ categories: customCats, icons: customIcons })); }
+    function updateSettingsCloud() { localStorage.setItem(`zaim_settings_${currentUser.id}`, JSON.stringify({ categories: customCats, icons: customIcons, categoriesIncome: customCatsIncome, iconsIncome: customIconsIncome })); }
 
     function customIOSDialog({ type = 'alert', title = '', msg = '', inputs = [], onConfirm }) {
         clearTimeout(iosDialogTimeout); document.getElementById('alert-title').innerText = title; document.getElementById('alert-title').style.display = title ? 'block' : 'none';
@@ -628,15 +708,20 @@
     function switchView(view, el) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active')); document.getElementById('view-' + view).classList.add('active'); el.classList.add('active'); }
 
     // --- DOMPET (DENGAN CHEVRON KIRI) ---
+    // --- DOMPET (DENGAN CHEVRON KIRI) ---
     function renderWallets() {
         const container = document.getElementById('wallet-scroll-container'); container.innerHTML = '';
         
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+        let totalAllWallets = 0;
 
-        wallets.forEach(w => {
+        const colors = ['linear-gradient(135deg, #007AFF, #0051FF)', 'linear-gradient(135deg, #5856D6, #3E3B92)', 'linear-gradient(135deg, #FF9500, #FF5E00)', 'linear-gradient(135deg, #34C759, #248A3D)', 'linear-gradient(135deg, #FF2D55, #D11B42)'];
+
+        wallets.forEach((w, idx) => {
             let wBal = 0; 
             let wExpenseMonth = 0;
+            const wColor = w.color || colors[idx % colors.length];
 
             transactions.filter(t => t.walletId == w.id).forEach(t => { 
                 wBal += t.type === 'income' ? t.amount : -t.amount; 
@@ -644,13 +729,14 @@
                     wExpenseMonth += t.amount;
                 }
             });
+            totalAllWallets += wBal;
 
             let expandedClass = (w.id == activeWalletId && isWalletExpanded) ? 'expanded' : '';
             let budgetPerc = w.budget > 0 ? Math.min((wExpenseMonth / w.budget) * 100, 100) : 0;
             let budgetColor = budgetPerc >= 90 ? 'var(--red)' : (budgetPerc >= 70 ? '#FF9500' : 'white');
 
             container.innerHTML += `
-                <div class="wallet-card ${w.id == activeWalletId ? 'active' : ''} ${expandedClass}" onclick="selectWallet(${w.id})">
+                <div class="wallet-card ${w.id == activeWalletId ? 'active' : ''} ${expandedClass}" style="background: ${wColor}" onclick="selectWallet(${w.id})">
                     <div class="wallet-edit-btn" onclick="editWallet(${w.id}, event)">✏️</div>
                     <p style="opacity: 0.9; font-size: 14px; margin-bottom: 5px;">${w.name}</p>
                     <h2 style="font-size: 32px; letter-spacing:-1px;">${formatRp(wBal)}</h2>
@@ -675,14 +761,17 @@
                             <div class="wallet-budget-bar">
                                 <div class="wallet-budget-fill" style="width: ${budgetPerc}%; background: ${budgetColor};"></div>
                             </div>
+                            <button class="wallet-btn-transfer" style="background: rgba(255,59,48,0.15); color: #FF3B30; margin-top: 10px;" onclick="deleteWallet(${w.id}, event)">🗑 Hapus Dompet</button>
                         </div>
                     ` : ''}
                 </div>`;
         });
+        document.getElementById('total-assets').innerText = formatRp(totalAllWallets);
         container.innerHTML += `<div class="wallet-card add-new" onclick="addWallet()"><span style="font-size: 32px; margin-bottom: 5px;">+</span>Tambah Dompet</div>`;
     }
 
     function selectWallet(id) { 
+        triggerHaptic();
         if (activeWalletId !== id) isWalletExpanded = false; 
         activeWalletId = id; 
         renderWallets(); renderFinance(); 
@@ -715,6 +804,21 @@
         });
     }
 
+    function deleteWallet(id, event) {
+        event.stopPropagation();
+        if (wallets.length <= 1) return customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Minimal harus ada 1 dompet tersisa!'});
+        const hasTx = transactions.some(t => t.walletId == id);
+        customIOSDialog({ type: 'confirm', title: 'Hapus Dompet', msg: hasTx ? 'Dompet ini memiliki transaksi. Menghapusnya akan ikut menghapus semua transaksi di dalamnya. Lanjutkan?' : 'Yakin ingin menghapus dompet ini?', onConfirm: async () => { 
+            showLoader("Menghapus...");
+            try {
+                await tursoBatch([{ sql: "DELETE FROM transactions WHERE walletId = ?", args: [id] }, { sql: "DELETE FROM wallets WHERE id = ?", args: [id] }]);
+                wallets = wallets.filter(w => w.id != id); transactions = transactions.filter(t => t.walletId != id);
+                localStorage.setItem('zaim_wallets', JSON.stringify(wallets)); localStorage.setItem('zaim_tx', JSON.stringify(transactions));
+                activeWalletId = wallets[0].id; isWalletExpanded = false; renderWallets(); renderFinance();
+            } catch(e) { customIOSDialog({type: 'alert', title: 'Error', msg: 'Gagal menghapus dompet.'}); } finally { hideLoader(); }
+        }});
+    }
+
     function transferWallet(event) {
         event.stopPropagation();
         const availableWallets = wallets.filter(w => w.id != activeWalletId);
@@ -740,30 +844,25 @@
 
                     showLoader('Memproses Transfer...');
 
-                    // PERBAIKAN: Gunakan ID Unik + Insert Bergiliran Agar Database Gratisan Tidak Gagal
-                    const tsOut = Date.now();
-                    const tsIn = tsOut + 100; 
+                    const targetWallet = wallets.find(w => w.id == targetWalletId);
+                    const sourceWallet = wallets.find(w => w.id == activeWalletId);
+                    const tsOut = Date.now(); const tsIn = tsOut + 100; 
 
-                    const txOut = { id: tsOut, user_id: currentUser.id, "walletId": activeWalletId, timestamp: tsOut, name: 'Transfer Keluar', amount: amount, description: 'Ke dompet lain', type: 'expense', category: 'Transfer', icon: '⇄' };
-                    const txIn = { id: tsIn, user_id: currentUser.id, "walletId": targetWalletId, timestamp: tsIn, name: 'Transfer Masuk', amount: amount, description: 'Dari dompet lain', type: 'income', category: 'Transfer', icon: '⇄' };
+                    const txOut = { id: tsOut, user_id: currentUser.id, "walletId": activeWalletId, timestamp: tsOut, name: 'Transfer Keluar', amount: amount, description: `Ke ${targetWallet.name}`, type: 'expense', category: 'Transfer', icon: '⇄' };
+                    const txIn = { id: tsIn, user_id: currentUser.id, "walletId": targetWalletId, timestamp: tsIn, name: 'Transfer Masuk', amount: amount, description: `Dari ${sourceWallet.name}`, type: 'income', category: 'Transfer', icon: '⇄' };
 
-                    let errOut = false, errIn = false;
-                    try { await tursoDb("INSERT INTO transactions (id, user_id, walletId, timestamp, name, amount, description, type, category, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [txOut.id, txOut.user_id, txOut.walletId, txOut.timestamp, txOut.name, txOut.amount, txOut.description, txOut.type, txOut.category, txOut.icon]); } catch(e) { errOut = true; }
-                    try { await tursoDb("INSERT INTO transactions (id, user_id, walletId, timestamp, name, amount, description, type, category, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [txIn.id, txIn.user_id, txIn.walletId, txIn.timestamp, txIn.name, txIn.amount, txIn.description, txIn.type, txIn.category, txIn.icon]); } catch(e) { errIn = true; }
-                    
-                    hideLoader();
-
-                    if (errOut || errIn) {
-                        console.error("Transfer Error");
-                        return setTimeout(() => customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Gagal menghubungi server saat transfer.'}), 300);
-                    }
-
-                    transactions.unshift(txIn);
-                    transactions.unshift(txOut);
-                    transactions.sort((a, b) => getValidTimestamp(b.timestamp) - getValidTimestamp(a.timestamp));
-                    
-                    localStorage.setItem('zaim_tx', JSON.stringify(transactions));
-                    renderWallets(); renderFinance();
+                    showLoader('Memproses Transfer...');
+                    try { 
+                        await tursoBatch([
+                            { sql: "INSERT INTO transactions (id, user_id, walletId, timestamp, name, amount, description, type, category, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [txOut.id, txOut.user_id, txOut.walletId, txOut.timestamp, txOut.name, txOut.amount, txOut.description, txOut.type, txOut.category, txOut.icon] },
+                            { sql: "INSERT INTO transactions (id, user_id, walletId, timestamp, name, amount, description, type, category, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", args: [txIn.id, txIn.user_id, txIn.walletId, txIn.timestamp, txIn.name, txIn.amount, txIn.description, txIn.type, txIn.category, txIn.icon] }
+                        ]); 
+                        transactions.unshift(txIn); transactions.unshift(txOut);
+                        transactions.sort((a, b) => getValidTimestamp(b.timestamp) - getValidTimestamp(a.timestamp));
+                        localStorage.setItem('zaim_tx', JSON.stringify(transactions));
+                        renderWallets(); renderFinance();
+                    } catch(e) { setTimeout(() => customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Gagal transfer database.'}), 300); }
+                    finally { hideLoader(); }
                 } else {
                     setTimeout(() => customIOSDialog({type: 'alert', title: 'Oops', msg: 'Nominal transfer tidak valid.'}), 300);
                 }
@@ -808,7 +907,17 @@
         } else {
             const labels = Object.keys(catTotals); const data = Object.values(catTotals); const bgColors = labels.map((_, i) => chartColors[i % chartColors.length]);
             drawDonutChart(labels, data, bgColors, false);
-            summaryDiv.innerHTML = labels.map((label, i) => { const perc = Math.round((data[i] / totalAmount) * 100); return `<div class="chart-summary-item"><div style="display:flex; align-items:center;"><span class="cat-color-dot" style="background:${bgColors[i]}"></span><span>${label}</span></div><div style="text-align:right;"><span style="font-weight:600;">${formatRp(data[i])}</span><span style="color:var(--text-sub); font-size:12px; margin-left:10px; width:35px; display:inline-block; text-align:right;">${perc}%</span></div></div>`; }).join('');
+            
+            // INSIGHT 13 & BANDINGKAN BULAN 12
+            const topCat = labels[data.indexOf(Math.max(...data))];
+            const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+            const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0).getTime();
+            const lastMonthTotal = transactions.filter(t => t.walletId == activeWalletId && t.type === currentChartMode && t.timestamp >= lastMonthStart && t.timestamp <= lastMonthEnd && t.category !== 'Transfer').reduce((a, b) => a + b.amount, 0);
+            
+            let compareHtml = lastMonthTotal > 0 ? `<p style="font-size:12px; color:var(--text-sub); margin-bottom:10px;">Bulan lalu: ${formatRp(lastMonthTotal)} (${totalAmount > lastMonthTotal ? ' naik 📈' : ' turun 📉'})</p>` : '';
+            let insightHtml = currentChartMode === 'expense' ? `<div style="background:rgba(0,122,255,0.05); padding:10px; border-radius:10px; margin-bottom:15px; font-size:13px; color:var(--blue); border-left:3px solid var(--blue);">💡 Pengeluaran terbanyakmu ada di <b>${topCat}</b>. Coba kurangi sedikit minggu depan!</div>` : '';
+
+            summaryDiv.innerHTML = insightHtml + compareHtml + labels.map((label, i) => { const perc = Math.round((data[i] / totalAmount) * 100); return `<div class="chart-summary-item"><div style="display:flex; align-items:center;"><span class="cat-color-dot" style="background:${bgColors[i]}"></span><span>${label}</span></div><div style="text-align:right;"><span style="font-weight:600;">${formatRp(data[i])}</span><span style="color:var(--text-sub); font-size:12px; margin-left:10px; width:35px; display:inline-block; text-align:right;">${perc}%</span></div></div>`; }).join('');
         }
     }
 
@@ -823,7 +932,8 @@
 
     function renderFinance() {
         const list = document.getElementById('transaction-list'); list.innerHTML = ''; 
-        const allActiveTx = transactions.filter(t => t.walletId == activeWalletId);
+        const search = document.getElementById('search-tx').value.toLowerCase();
+        const allActiveTx = transactions.filter(t => t.walletId == activeWalletId && (t.name.toLowerCase().includes(search) || t.category.toLowerCase().includes(search)));
         const statsHeader = document.getElementById('stats-header'), chartSection = document.getElementById('chart-section'), riwayatTitle = document.getElementById('riwayat-title');
 
         if(allActiveTx.length === 0) { 
@@ -868,6 +978,22 @@
         }
     }
 
+    function openWalletSelector() {
+        const dompetOptions = wallets.map(w => ({ value: w.id, label: w.name }));
+        customIOSDialog({ 
+            type: 'prompt', title: 'Pilih Dompet', msg: 'Pilih asal/tujuan dana untuk transaksi ini', 
+            inputs: [{ type: 'select', options: dompetOptions }], 
+            onConfirm: (vals) => { 
+                const selectedId = parseInt(vals[0]);
+                const selectedWallet = wallets.find(w => w.id == selectedId);
+                if(selectedWallet) {
+                    document.getElementById('tx-wallet').value = selectedId;
+                    document.getElementById('tx-wallet-display').innerText = selectedWallet.name;
+                }
+            } 
+        });
+    }
+
     function openTxModal(editId = null) {
         if(typeof editId === 'object') editId = null; 
         activeTxId = editId; 
@@ -875,12 +1001,17 @@
         document.getElementById('btn-edit-mode').innerText = "Edit"; 
         document.getElementById('modal-tx-title').innerText = editId ? "Edit Transaksi" : "Transaksi Baru";
         
+        const walletInput = document.getElementById('tx-wallet');
+        const walletDisplay = document.getElementById('tx-wallet-display');
+
         if(editId) {
             const tx = transactions.find(t => t.id == editId);
             if(!tx) return customIOSDialog({type: 'alert', title: 'Error', msg: 'Data transaksi tidak ditemukan!'});
             
             selectedCat = tx.category; 
             selectedIcon = tx.icon;
+            walletInput.value = tx.walletId;
+            walletDisplay.innerText = wallets.find(w => w.id == tx.walletId)?.name || 'Pilih Dompet';
             setTxType(tx.type); 
             document.getElementById('tx-name').value = tx.name; 
             document.getElementById('tx-amount').value = new Intl.NumberFormat('id-ID').format(tx.amount); 
@@ -889,6 +1020,8 @@
             document.getElementById('tx-name').value = ''; 
             document.getElementById('tx-amount').value = ''; 
             document.getElementById('tx-desc').value = ''; 
+            walletInput.value = activeWalletId;
+            walletDisplay.innerText = wallets.find(w => w.id == activeWalletId)?.name || 'Pilih Dompet';
             setTxType('expense'); 
         }
 
@@ -927,21 +1060,21 @@
     }
     function toggleEditMode() { isEditMode = !isEditMode; document.getElementById('btn-edit-mode').innerText = isEditMode ? "Selesai" : "Edit"; buildCats(); buildIcons(); }
     function buildCats() { 
-        let list = currentTxType === 'income' ? ['Gaji', 'Bonus', 'Sangu', 'Lainnya'] : customCats;
-        if (currentTxType === 'income' && selectedCat && !list.includes(selectedCat)) list.push(selectedCat);
-        document.getElementById('cat-container').innerHTML = list.map((c, idx) => `<div class="chip ${c === selectedCat ? 'active' : ''}" onclick="selectCat('${c}')">${c}${isEditMode && currentTxType === 'expense' ? `<div class="delete-badge" onclick="deleteCat(${idx}, event)">✕</div>` : ''}</div>`).join('') + (!isEditMode && currentTxType === 'expense' ? `<div class="chip chip-add" onclick="addNewCat()">+ Tambah</div>` : ''); 
+        let list = currentTxType === 'income' ? customCatsIncome : customCats;
+        if (selectedCat && !list.includes(selectedCat)) list.push(selectedCat);
+        document.getElementById('cat-container').innerHTML = list.map((c, idx) => `<div class="chip ${c === selectedCat ? 'active' : ''}" onclick="selectCat('${c}')">${c}${isEditMode ? `<div class="delete-badge" onclick="deleteCat(${idx}, event)">✕</div>` : ''}</div>`).join('') + (!isEditMode ? `<div class="chip chip-add" onclick="addNewCat()">+ Tambah</div>` : ''); 
     }
     function buildIcons() { 
-        let list = currentTxType === 'income' ? ['💰', '💵', '🏧', '🎁', '🏦'] : customIcons;
-        if (currentTxType === 'income' && selectedIcon && !list.includes(selectedIcon)) list.push(selectedIcon);
-        document.getElementById('icon-container').innerHTML = list.map((i, idx) => `<div class="icon-opt ${i === selectedIcon ? 'active' : ''}" onclick="selectIcon('${i}')">${i}${isEditMode && currentTxType === 'expense' ? `<div class="delete-badge" onclick="deleteIcon(${idx}, event)">✕</div>` : ''}</div>`).join('') + (!isEditMode && currentTxType === 'expense' ? `<div class="icon-opt icon-add" onclick="addNewIcon()">+</div>` : ''); 
+        let list = currentTxType === 'income' ? customIconsIncome : customIcons;
+        if (selectedIcon && !list.includes(selectedIcon)) list.push(selectedIcon);
+        document.getElementById('icon-container').innerHTML = list.map((i, idx) => `<div class="icon-opt ${i === selectedIcon ? 'active' : ''}" onclick="selectIcon('${i}')">${i}${isEditMode ? `<div class="delete-badge" onclick="deleteIcon(${idx}, event)">✕</div>` : ''}</div>`).join('') + (!isEditMode ? `<div class="icon-opt icon-add" onclick="addNewIcon()">+</div>` : ''); 
     }
-    function deleteCat(idx, event) { event.stopPropagation(); customIOSDialog({ type: 'confirm', title: 'Hapus', msg: 'Yakin hapus kategori?', onConfirm: () => { if(selectedCat === customCats[idx]) selectedCat = customCats[0] || ''; customCats.splice(idx, 1); buildCats(); updateSettingsCloud(); }}); }
-    function deleteIcon(idx, event) { event.stopPropagation(); customIOSDialog({ type: 'confirm', title: 'Hapus', msg: 'Yakin hapus ikon?', onConfirm: () => { if(selectedIcon === customIcons[idx]) selectedIcon = customIcons[0] || ''; customIcons.splice(idx, 1); buildIcons(); updateSettingsCloud(); }}); }
+    function deleteCat(idx, event) { event.stopPropagation(); customIOSDialog({ type: 'confirm', title: 'Hapus', msg: 'Yakin hapus kategori?', onConfirm: () => { let list = currentTxType === 'income' ? customCatsIncome : customCats; if(selectedCat === list[idx]) selectedCat = list[0] || ''; list.splice(idx, 1); buildCats(); updateSettingsCloud(); }}); }
+    function deleteIcon(idx, event) { event.stopPropagation(); customIOSDialog({ type: 'confirm', title: 'Hapus', msg: 'Yakin hapus ikon?', onConfirm: () => { let list = currentTxType === 'income' ? customIconsIncome : customIcons; if(selectedIcon === list[idx]) selectedIcon = list[0] || ''; list.splice(idx, 1); buildIcons(); updateSettingsCloud(); }}); }
     function selectCat(c) { if(!isEditMode) { selectedCat = c; buildCats(); } }
     function selectIcon(i) { if(!isEditMode) { selectedIcon = i; buildIcons(); } }
-    function addNewCat() { customIOSDialog({ type: 'prompt', title: 'Kategori Baru', msg: 'Nama kategori', inputs: [{ placeholder: 'Misal: Belanja' }], onConfirm: (vals) => { const n = vals[0]; if(n) { customCats.push(n); buildCats(); selectCat(n); updateSettingsCloud(); } }}); }
-    function addNewIcon() { customIOSDialog({ type: 'prompt', title: 'Ikon Baru', msg: '1 emoji sesuai', inputs: [{ placeholder: 'Misal: 🎁' }], onConfirm: (vals) => { const i = vals[0]; if(i) { customIcons.push(i); buildIcons(); selectIcon(i); updateSettingsCloud(); } }}); }
+    function addNewCat() { customIOSDialog({ type: 'prompt', title: 'Kategori Baru', msg: 'Nama kategori', inputs: [{ placeholder: 'Misal: Belanja' }], onConfirm: (vals) => { const n = vals[0]?.trim(); if(n) { if(currentTxType === 'income') customCatsIncome.push(n); else customCats.push(n); buildCats(); selectCat(n); updateSettingsCloud(); } }}); }
+    function addNewIcon() { customIOSDialog({ type: 'prompt', title: 'Ikon Baru', msg: 'Harus berupa 1 Emoji', inputs: [{ placeholder: 'Misal: 🎁' }], onConfirm: (vals) => { const i = vals[0]?.trim(); if(i) { if(/[a-zA-Z0-9+\-=@_!#$%^&*<>{}]/.test(i)) return setTimeout(() => customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Hanya diperbolehkan memasukkan Emoji!'}), 300); if(currentTxType === 'income') customIconsIncome.push(i); else customIcons.push(i); buildIcons(); selectIcon(i); updateSettingsCloud(); } }}); }
 
     async function saveTransaction() {
         try {
@@ -969,11 +1102,13 @@
                 existingTx = transactions[idx];
                 finalTimestamp = getValidTimestamp(existingTx.timestamp); 
             }
+            
+            const selectedWalletId = parseInt(document.getElementById('tx-wallet').value);
 
             const transactionData = {
                 id: activeTxId ? existingTx.id : Date.now(),
                 user_id: currentUser.id,
-                "walletId": activeTxId ? existingTx.walletId : activeWalletId,
+                "walletId": selectedWalletId || activeWalletId,
                 timestamp: finalTimestamp,
                 name: name,
                 amount: amount,
@@ -1004,6 +1139,7 @@
             transactions.sort((a, b) => getValidTimestamp(b.timestamp) - getValidTimestamp(a.timestamp));
             localStorage.setItem('zaim_tx', JSON.stringify(transactions));
             
+            triggerHaptic();
             renderWallets(); 
             renderFinance(); 
             closeModal('modal-tx', false);
