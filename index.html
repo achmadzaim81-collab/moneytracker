@@ -120,7 +120,8 @@
         .tab-icon { font-size: 22px; display: block; margin-bottom: 2px; transition: transform 0.3s ease; }
         .tab-item.active .tab-icon { transform: translateY(-2px); }
         
-        .fab { position: absolute; bottom: calc(var(--safe-bottom) + 35px); right: 20px; width: 56px; height: 56px; background: var(--blue); color: white; border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 300; box-shadow: 0 4px 15px rgba(0,122,255,0.4); cursor: pointer; z-index: 40; transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .fab { position: absolute; bottom: calc(var(--safe-bottom) + 35px); right: 20px; width: 56px; height: 56px; background: var(--blue); color: white; border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 300; box-shadow: 0 4px 15px rgba(0,122,255,0.4); cursor: pointer; z-index: 40; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); overflow: hidden; }
+        .fab.minimized { width: 35px; height: 5px; bottom: calc(env(safe-area-inset-bottom, 10px) + 10px); right: 30px; border-radius: 5px; background: rgba(0,0,0,0.25); box-shadow: none; color: transparent; font-size: 0; }
 
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(3px); z-index: 100; display: none; justify-content: center; align-items: flex-end; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.active { display: flex; opacity: 1; }
@@ -585,10 +586,20 @@
     function handleScroll(e) {
         const currentScroll = e.target.scrollTop;
         const navBar = document.getElementById('app-tab-bar');
+        const fabBtn = document.querySelector('.fab');
+        
         if (currentScroll > lastScrollTop && currentScroll > 15) {
-            if (!isNavHidden) { navBar.classList.add('minimized'); isNavHidden = true; }
+            if (!isNavHidden) { 
+                if(navBar) navBar.classList.add('minimized'); 
+                if(fabBtn) fabBtn.classList.add('minimized');
+                isNavHidden = true; 
+            }
         } else if (currentScroll < lastScrollTop) {
-            if (isNavHidden) { navBar.classList.remove('minimized'); isNavHidden = false; }
+            if (isNavHidden) { 
+                if(navBar) navBar.classList.remove('minimized'); 
+                if(fabBtn) fabBtn.classList.remove('minimized');
+                isNavHidden = false; 
+            }
         }
         lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
     }
