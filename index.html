@@ -3,11 +3,13 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="color-scheme" content="light">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Zaim Finance iOS</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
+            color-scheme: light;
             --bg-body: #000000; --bg-ios: #F2F2F7; --card-bg: #FFFFFF;
             --blue: #007AFF; --red: #FF3B30; --green: #34C759;
             --text-main: #000000; --text-sub: #8E8E93;
@@ -16,6 +18,9 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        input, button, select, textarea { -webkit-appearance: none; appearance: none; font-family: inherit; }
+        input[type="datetime-local"] { background: transparent; }
 
         html, body { height: 100%; width: 100%; overflow: hidden; position: fixed; top: 0; left: 0; }
         body { background-color: var(--bg-body); display: flex; justify-content: center; align-items: center; }
@@ -199,6 +204,76 @@
         .sim-btn:active { transform: scale(0.92); }
         .sim-save-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #007AFF, #0051FF); color: white; border-radius: 16px; font-weight: 700; font-size: 16px; border: none; cursor: pointer; display: none; box-shadow: 0 8px 20px rgba(0,122,255,0.3); transition: 0.3s; margin-top: 15px; }
         .sim-save-btn:active { transform: scale(0.95); }
+        /* --- QUICK INPUT & SIMULASI iOS STYLE --- */
+.glass-modal-sheet {
+    background: rgba(242, 242, 247, 0.85);
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+    padding: 24px;
+}
+.qi-row { margin-bottom: 18px; position: relative; }
+.qi-input { 
+    width: 100%; padding: 18px 20px; font-size: 16px; border-radius: 18px; 
+    border: 1px solid rgba(0,0,0,0.05); background: white; outline: none; 
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+}
+.qi-input:focus { border-color: var(--blue); box-shadow: 0 4px 20px rgba(0,122,255,0.15); transform: translateY(-2px); }
+.qi-select { 
+    width: 100%; padding: 18px 20px; font-size: 16px; border-radius: 18px; 
+    border: 1px solid rgba(0,0,0,0.05); background: white; outline: none; 
+    appearance: none; box-shadow: 0 4px 15px rgba(0,0,0,0.03); color: var(--text-main);
+}
+.qi-error { color: var(--red); font-size: 12px; margin-top: 6px; display: none; margin-left: 10px; transition: 0.3s; }
+.qi-icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-top: 10px;}
+.qi-icon-btn { 
+    font-size: 26px; padding: 12px 0; background: white; border-radius: 16px; 
+    border: 2px solid transparent; text-align: center; cursor: pointer; 
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 4px 10px rgba(0,0,0,0.03); 
+}
+.qi-icon-btn.active { border-color: var(--blue); background: #F0F7FF; transform: scale(1.1); box-shadow: 0 6px 15px rgba(0,122,255,0.2); }
+
+/* Box Simulasi */
+.sim-card { 
+    background: rgba(255,255,255,0.6); border-radius: 20px; padding: 18px; 
+    margin-top: 20px; display: none; border: 1px solid rgba(0,122,255,0.2); 
+    box-shadow: 0 8px 20px rgba(0,122,255,0.08); animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.sim-title { font-size: 13px; font-weight: 800; color: var(--blue); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.sim-text { font-size: 14px; margin-bottom: 6px; color: var(--text-main); line-height: 1.4; }
+.sim-indicator { display: inline-block; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; margin-top: 8px; }
+.sim-safe { background: rgba(52, 199, 89, 0.15); color: #248A3D; }
+.sim-warn { background: rgba(255, 149, 0, 0.15); color: #CC7700; }
+.sim-crit { background: rgba(255, 59, 48, 0.15); color: #D11B42; }
+
+.qi-btn-row { display: flex; gap: 12px; margin-top: 30px; }
+.qi-btn { flex: 1; padding: 18px; border-radius: 20px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; transition: all 0.3s; }
+.qi-btn-cancel { background: rgba(0,0,0,0.06); color: var(--text-main); }
+.qi-btn-cancel:active { background: rgba(0,0,0,0.1); }
+.qi-btn-save { background: var(--blue); color: white; box-shadow: 0 8px 20px rgba(0,122,255,0.3); }
+.qi-btn-save:disabled { background: #A1C6FF; color: rgba(255,255,255,0.7); cursor: not-allowed; box-shadow: none; transform: none; }
+.qi-btn-save:not(:disabled):active { transform: scale(0.96); box-shadow: 0 4px 10px rgba(0,122,255,0.2); }
+
+/* --- CHAT UI STYLES --- */
+.chat-modal-sheet { background: #F2F2F7; padding: 0; display: flex; flex-direction: column; overflow: hidden; height: 92%; }
+.chat-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: rgba(242, 242, 247, 0.95); backdrop-filter: blur(10px); border-bottom: 0.5px solid var(--separator); z-index: 10; flex-shrink: 0; }
+.chat-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; padding-bottom: 30px; }
+.chat-bubble { max-width: 82%; padding: 12px 18px; border-radius: 20px; font-size: 15px; line-height: 1.4; animation: chatSlideUp 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; opacity: 0; transform: translateY(15px); box-shadow: 0 2px 5px rgba(0,0,0,0.02); position: relative; }
+.bubble-ai { background: #E5E5EA; color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 4px; }
+.bubble-user { background: var(--blue); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+@keyframes chatSlideUp { to { opacity: 1; transform: translateY(0); } }
+.chat-options { display: flex; flex-direction: column; gap: 10px; margin-top: 5px; align-self: flex-start; animation: chatSlideUp 0.3s ease forwards; opacity: 0; animation-delay: 0.1s; width: 100%; max-width: 280px; }
+.chat-btn-opt { background: white; color: var(--blue); padding: 14px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid rgba(0,122,255,0.1); transition: 0.2s; }
+.chat-btn-opt:active { transform: scale(0.96); background: #F0F7FF; }
+.chat-input-area { padding: 12px 15px calc(15px + env(safe-area-inset-bottom, 0px)); background: #F2F2F7; border-top: 0.5px solid var(--separator); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.chat-sticky-input { flex: 1; padding: 14px 18px; border-radius: 24px; border: 1px solid #D1D1D6; background: white; font-size: 16px; outline: none; transition: 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+.chat-sticky-input:focus { border-color: var(--blue); }
+.chat-send-btn { background: var(--blue); color: white; width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; border: none; font-weight: bold; font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,122,255,0.2); flex-shrink: 0; }
+.chat-send-btn:active { transform: scale(0.9); }
+.chat-summary-box { background: white; border-radius: 24px; padding: 25px 20px; width: 100%; max-width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); margin-top: 10px; align-self: center; animation: chatSlideUp 0.4s ease forwards; opacity: 0; }
     </style>
 </head>
 <body>
@@ -261,6 +336,8 @@
                         <button class="filter-btn active" onclick="setChartFilter('month', this)">Bulan Ini</button>
                         <button class="filter-btn" onclick="setChartFilter('week', this)">Minggu Ini</button>
                         <button class="filter-btn" onclick="setChartFilter('today', this)">Hari Ini</button>
+                        <button class="filter-btn" onclick="setChartFilter('year', this)">Tahun Ini</button>
+                        <button class="filter-btn" onclick="setChartFilter('all', this)">Semua</button>
                         <button class="filter-btn" onclick="setChartFilter('custom', this)">Kustom</button>
                     </div>
                     <div style="position: relative; height: 220px; width: 100%; display: flex; justify-content: center;">
@@ -290,37 +367,19 @@
 
     
     <div id="modal-tx" class="modal-overlay">
-        <div class="modal-sheet">
-            <div class="modal-header">
-                <button onclick="closeModal('modal-tx', false)" style="background:none; border:none; color:var(--blue); font-size:16px;">Batal</button>
-                <strong id="modal-tx-title">Transaksi Baru</strong>
-                <button onclick="saveTransaction()" style="background:none; border:none; color:var(--blue); font-weight:600; font-size:16px;">Simpan</button>
+        <div class="modal-sheet chat-modal-sheet">
+            <div class="chat-header">
+                <span style="color: var(--blue); font-size: 26px; cursor: pointer; padding-right: 15px;" onclick="closeModal('modal-tx', false)">‹</span>
+                <strong style="font-size: 17px; text-align: center; flex: 1;">Catat Transaksi</strong>
+                <span style="color: var(--blue); font-size: 15px; font-weight: 500; cursor: pointer; padding-left: 10px;" onclick="closeModal('modal-tx', false)">Batal</span>
             </div>
-            <div class="modal-body">
-                <div class="segmented-control">
-                    <div id="seg-expense" class="segment-btn active" onclick="setTxType('expense')">Pengeluaran</div>
-                    <div id="seg-income" class="segment-btn" onclick="setTxType('income')">Pemasukan</div>
-                </div>
-                <div class="input-group">
-                    <div class="form-row"><label>Nama</label><input type="text" id="tx-name" placeholder="Misal: Kopi" autocomplete="off"></div>
-                    <div class="form-row"><label>Jumlah</label><input type="tel" id="tx-amount" placeholder="0" oninput="formatRupiahInput(this)" autocomplete="off"></div>
-                    <div class="form-row" style="cursor: pointer;" onclick="openWalletSelector()">
-                        <label>Dompet</label>
-                        <div id="tx-wallet-display" style="flex:1; font-size:16px; color:var(--blue); text-align:right; padding-right: 5px; font-weight: 500;">Pilih Dompet</div>
-                        <input type="hidden" id="tx-wallet">
-                    </div>
-                    <div class="form-row"><label>Catatan</label><input type="text" id="tx-desc" placeholder="Opsional (mis: Traktir teman)" autocomplete="off"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; margin-bottom: 5px;">
-                    <label style="font-size: 12px; color: var(--text-sub); margin-left: 5px; text-transform: uppercase;">Kategori & Ikon</label>
-                    <span id="btn-edit-mode" onclick="toggleEditMode()" style="color: var(--blue); font-size: 14px; font-weight: 500; cursor: pointer; padding-right: 5px;">Edit</span>
-                </div>
-                <div class="chips-container" id="cat-container"></div>
-                <div class="icon-grid" id="icon-container" style="margin-top: 15px; margin-bottom: 30px;"></div>
-            </div>
+            
+            <div id="chat-area" class="chat-area"></div>
+            
+            <div id="chat-input-area" class="chat-input-area"></div>
+            <input type="hidden" id="tx-wallet">
         </div>
     </div>
-
     <div id="sheet-tx" class="modal-overlay" onclick="if(event.target===this) closeActionSheet()">
         <div class="action-sheet-menu">
             <div class="action-group">
@@ -923,6 +982,8 @@
         if(currentChartFilter === 'today') { const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); filteredTx = activeTx.filter(t => t.timestamp >= start); } 
         else if (currentChartFilter === 'week') { const start = new Date(now.setDate(now.getDate() - now.getDay())).setHours(0,0,0,0); filteredTx = activeTx.filter(t => t.timestamp >= start); } 
         else if (currentChartFilter === 'month') { const start = new Date(now.getFullYear(), now.getMonth(), 1).getTime(); filteredTx = activeTx.filter(t => t.timestamp >= start); } 
+        else if (currentChartFilter === 'year') { const start = new Date(now.getFullYear(), 0, 1).getTime(); filteredTx = activeTx.filter(t => t.timestamp >= start); } 
+        else if (currentChartFilter === 'all') { filteredTx = activeTx; }
         else if (currentChartFilter === 'custom') { filteredTx = activeTx.filter(t => t.timestamp >= customFilterStart && t.timestamp <= customFilterEnd); }
 
         const catTotals = {}; let totalAmount = 0;
@@ -933,7 +994,8 @@
             drawDonutChart(['Tidak ada data'], [1], ['#E5E5EA'], true);
             summaryDiv.innerHTML = `<p style="text-align:center; font-size:13px; color:var(--text-sub); padding:10px 0;">Tidak ada ${currentChartMode === 'expense' ? 'pengeluaran' : 'pemasukan'} murni di periode ini.</p>`;
         } else {
-            const labels = Object.keys(catTotals); const data = Object.values(catTotals); const bgColors = labels.map((_, i) => chartColors[i % chartColors.length]);
+            const sortedKeys = Object.keys(catTotals).sort((a, b) => catTotals[b] - catTotals[a]);
+            const labels = sortedKeys; const data = sortedKeys.map(k => catTotals[k]); const bgColors = labels.map((_, i) => chartColors[i % chartColors.length]);
             drawDonutChart(labels, data, bgColors, false);
             
             // INSIGHT 13 & BANDINGKAN BULAN 12
@@ -1022,145 +1084,225 @@
         });
     }
 
+    function formatDatetimeLocal(ts) {
+        const d = new Date(ts); const pad = (n) => n.toString().padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    // -- VARIABEL STATE CHAT INPUT --
+    let chatTxData = { id: null, type: 'expense', name: '', amount: 0, category: '', datetime: '', icon: '' };
+
     function openTxModal(editId = null) {
         if(typeof editId === 'object') editId = null; 
-        activeTxId = editId; 
-        isEditMode = false; 
-        document.getElementById('btn-edit-mode').innerText = "Edit"; 
-        document.getElementById('modal-tx-title').innerText = editId ? "Edit Transaksi" : "Transaksi Baru";
+        chatTxData = { id: editId, type: 'expense', name: '', amount: '', category: '', datetime: '', icon: '' };
+        document.getElementById('tx-wallet').value = activeWalletId;
         
-        const walletInput = document.getElementById('tx-wallet');
-        const walletDisplay = document.getElementById('tx-wallet-display');
-
+        showModal('modal-tx');
+        
         if(editId) {
             const tx = transactions.find(t => t.id == editId);
-            if(!tx) return customIOSDialog({type: 'alert', title: 'Error', msg: 'Data transaksi tidak ditemukan!'});
-            
-            selectedCat = tx.category; 
-            selectedIcon = tx.icon;
-            walletInput.value = tx.walletId;
-            walletDisplay.innerText = wallets.find(w => w.id == tx.walletId)?.name || 'Pilih Dompet';
-            setTxType(tx.type); 
-            document.getElementById('tx-name').value = tx.name; 
-            document.getElementById('tx-amount').value = new Intl.NumberFormat('id-ID').format(tx.amount); 
-            document.getElementById('tx-desc').value = tx.description || ''; 
+            if(tx) {
+                chatTxData = { ...tx, datetime: formatDatetimeLocal(getValidTimestamp(tx.timestamp)) };
+                initChatFlow(7);
+            }
         } else {
-            document.getElementById('tx-name').value = ''; 
-            document.getElementById('tx-amount').value = ''; 
-            document.getElementById('tx-desc').value = ''; 
-            walletInput.value = activeWalletId;
-            walletDisplay.innerText = wallets.find(w => w.id == activeWalletId)?.name || 'Pilih Dompet';
-            setTxType('expense'); 
+            initChatFlow(1);
         }
-
-        buildCats(); 
-        buildIcons(); 
-        showModal('modal-tx');
     }
-    
-    function setTxType(type) { 
-        currentTxType = type; 
-        document.getElementById('seg-expense').classList.toggle('active', type === 'expense'); 
-        document.getElementById('seg-income').classList.toggle('active', type === 'income'); 
+
+    function initChatFlow(startStep = 1) {
+        const area = document.getElementById('chat-area');
+        area.innerHTML = '';
+        document.getElementById('chat-input-area').innerHTML = '';
+        document.getElementById('chat-input-area').style.display = 'flex';
+        setTimeout(() => advanceChatStep(startStep), 200);
+    }
+
+    function addAIBubble(text) {
+        document.getElementById('chat-area').innerHTML += `<div class="chat-bubble bubble-ai">${text}</div>`;
+        scrollToBottomChat();
+    }
+
+    function addUserBubble(text) {
+        document.getElementById('chat-area').innerHTML += `<div class="chat-bubble bubble-user">${text}</div>`;
+        scrollToBottomChat();
+    }
+
+    function scrollToBottomChat() {
+        const area = document.getElementById('chat-area');
+        setTimeout(() => { area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' }); }, 100);
+    }
+
+    function advanceChatStep(step) {
+        const inputArea = document.getElementById('chat-input-area');
+        const chatArea = document.getElementById('chat-area');
+        inputArea.innerHTML = '';
+
+        if(step === 1) {
+            addAIBubble("Halo! Mau catat pengeluaran atau pemasukan?");
+            chatArea.innerHTML += `
+                <div class="chat-options" id="opt-step-1">
+                    <div class="chat-btn-opt" onclick="handleChatSelect(1, 'expense', '💸 Pengeluaran')">💸 Pengeluaran</div>
+                    <div class="chat-btn-opt" onclick="handleChatSelect(1, 'income', '💰 Pemasukan')">💰 Pemasukan</div>
+                </div>`;
+            scrollToBottomChat();
+        }
+        else if(step === 2) {
+            addAIBubble("Sip. Masukkan judul transaksinya ya.");
+            inputArea.innerHTML = `
+                <input type="text" id="chat-input-name" class="chat-sticky-input" placeholder="Contoh: Kopi, Makan, Gaji" autocomplete="off" onkeypress="if(event.key==='Enter') submitChatInput(2)">
+                <button class="chat-send-btn" onclick="submitChatInput(2)">↑</button>
+            `;
+            setTimeout(() => document.getElementById('chat-input-name').focus(), 300);
+        }
+        else if(step === 3) {
+            addAIBubble("Berapa nominalnya?");
+            inputArea.innerHTML = `
+                <input type="tel" id="chat-input-amount" class="chat-sticky-input" placeholder="Rp 0" autocomplete="off" oninput="formatRupiahInput(this)" onkeypress="if(event.key==='Enter') submitChatInput(3)">
+                <button class="chat-send-btn" onclick="submitChatInput(3)">↑</button>
+            `;
+            setTimeout(() => document.getElementById('chat-input-amount').focus(), 300);
+        }
+        else if(step === 4) {
+            addAIBubble("Pilih kategori yang sesuai.");
+            const listCat = chatTxData.type === 'income' ? customCatsIncome : customCats;
+            const opts = listCat.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            inputArea.innerHTML = `
+                <select id="chat-input-cat" class="chat-sticky-input qi-select" style="margin:0; appearance:none; color:var(--text-main); font-weight:500;" onchange="submitChatInput(4)">
+                    <option value="" disabled selected>Pilih Kategori...</option>
+                    ${opts}
+                </select>
+                <button class="chat-send-btn" onclick="submitChatInput(4)">↑</button>
+            `;
+        }
+        else if(step === 5) {
+            addAIBubble("Tanggal & jam? (Opsional)");
+            chatArea.innerHTML += `
+                <div class="chat-options" id="opt-step-5" style="flex-direction:row;">
+                    <div class="chat-btn-opt" style="flex:1; background:#E5E5EA; border:none; color:var(--text-main);" onclick="handleChatSelect(5, 'skip', 'Lewati')">Lewati</div>
+                    <div style="flex:1; position:relative;">
+                        <input type="datetime-local" id="chat-input-date" class="chat-sticky-input" style="opacity:0; position:absolute; top:0; left:0; width:100%; height:100%; cursor:pointer;" onchange="handleChatSelect(5, this.value, 'Tanggal Kustom')">
+                        <div class="chat-btn-opt" style="width:100%;">Pilih Waktu</div>
+                    </div>
+                </div>`;
+            scrollToBottomChat();
+        }
+        else if(step === 6) {
+            addAIBubble("Terakhir, pilih ikonnya!");
+            const listIcon = chatTxData.type === 'income' ? customIconsIncome : customIcons;
+            let gridHtml = listIcon.map(i => `<div class="qi-icon-btn" style="padding:15px 0; font-size:26px; border:none; box-shadow:none;" onclick="handleChatSelect(6, '${i}', '${i}')">${i}</div>`).join('');
+            
+            chatArea.innerHTML += `
+                <div class="chat-options" id="opt-step-6" style="max-width:100%; background:white; border-radius:20px; padding:10px;">
+                    <div class="qi-icon-grid" style="grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap:5px; margin:0;">
+                        ${gridHtml}
+                    </div>
+                </div>`;
+            scrollToBottomChat();
+        }
+        else if(step === 7) {
+            inputArea.style.display = 'none';
+            if(!chatTxData.id) addAIBubble("Semua siap! Berikut ringkasannya:");
+            else addAIBubble("Berikut data transaksimu:");
+
+            let ts = chatTxData.datetime ? getValidTimestamp(chatTxData.datetime) : Date.now();
+            let dateStr = new Date(ts).toLocaleString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+            
+            chatArea.innerHTML += `
+                <div class="chat-summary-box">
+                    <div style="font-size:45px; text-align:center; margin-bottom:10px;">${chatTxData.icon}</div>
+                    <h3 style="text-align:center; margin-bottom:5px; font-size:18px;">${chatTxData.name}</h3>
+                    <h2 style="text-align:center; color:${chatTxData.type==='income'?'var(--green)':'var(--text-main)'}; margin-bottom:20px; font-size:28px;">${chatTxData.type==='income'?'+':''}${formatRp(chatTxData.amount)}</h2>
+                    <div style="font-size:14px; color:var(--text-sub); display:flex; justify-content:space-between; border-bottom:0.5px solid var(--separator); padding-bottom:8px; margin-bottom:8px;">
+                        <span>Kategori</span> <span style="color:var(--text-main); font-weight:600;">${chatTxData.category}</span>
+                    </div>
+                    <div style="font-size:14px; color:var(--text-sub); display:flex; justify-content:space-between;">
+                        <span>Waktu</span> <span style="color:var(--text-main); font-weight:600;">${dateStr}</span>
+                    </div>
+                </div>
+                <div class="chat-options" style="flex-direction:row; width:100%; max-width:300px; align-self:center; margin-top:20px;">
+                    <button class="chat-btn-opt" style="flex:1; background:#E5E5EA; border:none; color:var(--text-main);" onclick="initChatFlow(1)">Edit Ulang</button>
+                    <button class="chat-btn-opt" id="btn-save-chat" style="flex:1.5; background:var(--blue); color:white; border:none;" onclick="saveChatTransaction()">Simpan</button>
+                </div>
+            `;
+            scrollToBottomChat();
+        }
+    }
+
+    function handleChatSelect(step, val, displayVal) {
+        document.getElementById(`opt-step-${step}`).style.display = 'none';
+        if(displayVal) addUserBubble(displayVal);
         
-        if (!activeTxId && !isEditMode) {
-            document.getElementById('tx-name').value = ''; 
-            document.getElementById('tx-amount').value = ''; 
-            document.getElementById('tx-desc').value = '';
+        if(step === 1) { chatTxData.type = val; advanceChatStep(2); }
+        else if(step === 5) {
+            if(val !== 'skip') chatTxData.datetime = val;
+            else chatTxData.datetime = Date.now();
+            advanceChatStep(6);
         }
-
-        if (type === 'expense') {
-            document.getElementById('tx-name').placeholder = "Misal: Kopi";
-            document.getElementById('tx-desc').placeholder = "Opsional (mis: Traktir teman)";
-            if (!activeTxId && !isEditMode) {
-                selectedIcon = customIcons.includes('💸') ? '💸' : customIcons[0];
-                selectedCat = customCats[0] || 'Lainnya';
-            }
-        } else {
-            document.getElementById('tx-name').placeholder = "Misal: Uang Saku / Gaji";
-            document.getElementById('tx-desc').placeholder = "Opsional (mis: Dari Orang Tua / Klien)";
-            if (!activeTxId && !isEditMode) {
-                selectedIcon = '💰';
-                selectedCat = 'Gaji';
-            }
+        else if(step === 6) {
+            chatTxData.icon = val;
+            advanceChatStep(7);
         }
-        buildCats(); buildIcons();
     }
-    function toggleEditMode() { isEditMode = !isEditMode; document.getElementById('btn-edit-mode').innerText = isEditMode ? "Selesai" : "Edit"; buildCats(); buildIcons(); }
-    function buildCats() { 
-        let list = currentTxType === 'income' ? customCatsIncome : customCats;
-        if (selectedCat && !list.includes(selectedCat)) list.push(selectedCat);
-        document.getElementById('cat-container').innerHTML = list.map((c, idx) => `<div class="chip ${c === selectedCat ? 'active' : ''}" onclick="selectCat('${c}')">${c}${isEditMode ? `<div class="delete-badge" onclick="deleteCat(${idx}, event)">✕</div>` : ''}</div>`).join('') + (!isEditMode ? `<div class="chip chip-add" onclick="addNewCat()">+ Tambah</div>` : ''); 
-    }
-    function buildIcons() { 
-        let list = currentTxType === 'income' ? customIconsIncome : customIcons;
-        if (selectedIcon && !list.includes(selectedIcon)) list.push(selectedIcon);
-        document.getElementById('icon-container').innerHTML = list.map((i, idx) => `<div class="icon-opt ${i === selectedIcon ? 'active' : ''}" onclick="selectIcon('${i}')">${i}${isEditMode ? `<div class="delete-badge" onclick="deleteIcon(${idx}, event)">✕</div>` : ''}</div>`).join('') + (!isEditMode ? `<div class="icon-opt icon-add" onclick="addNewIcon()">+</div>` : ''); 
-    }
-    function deleteCat(idx, event) { event.stopPropagation(); customIOSDialog({ type: 'confirm', title: 'Hapus', msg: 'Yakin hapus kategori?', onConfirm: () => { let list = currentTxType === 'income' ? customCatsIncome : customCats; if(selectedCat === list[idx]) selectedCat = list[0] || ''; list.splice(idx, 1); buildCats(); updateSettingsCloud(); }}); }
-    function deleteIcon(idx, event) { event.stopPropagation(); customIOSDialog({ type: 'confirm', title: 'Hapus', msg: 'Yakin hapus ikon?', onConfirm: () => { let list = currentTxType === 'income' ? customIconsIncome : customIcons; if(selectedIcon === list[idx]) selectedIcon = list[0] || ''; list.splice(idx, 1); buildIcons(); updateSettingsCloud(); }}); }
-    function selectCat(c) { if(!isEditMode) { selectedCat = c; buildCats(); } }
-    function selectIcon(i) { if(!isEditMode) { selectedIcon = i; buildIcons(); } }
-    function addNewCat() { customIOSDialog({ type: 'prompt', title: 'Kategori Baru', msg: 'Nama kategori', inputs: [{ placeholder: 'Misal: Belanja' }], onConfirm: (vals) => { const n = vals[0]?.trim(); if(n) { if(currentTxType === 'income') customCatsIncome.push(n); else customCats.push(n); buildCats(); selectCat(n); updateSettingsCloud(); } }}); }
-    function addNewIcon() { customIOSDialog({ type: 'prompt', title: 'Ikon Baru', msg: 'Harus berupa 1 Emoji', inputs: [{ placeholder: 'Misal: 🎁' }], onConfirm: (vals) => { const i = vals[0]?.trim(); if(i) { if(/[a-zA-Z0-9+\-=@_!#$%^&*<>{}]/.test(i)) return setTimeout(() => customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Hanya diperbolehkan memasukkan Emoji!'}), 300); if(currentTxType === 'income') customIconsIncome.push(i); else customIcons.push(i); buildIcons(); selectIcon(i); updateSettingsCloud(); } }}); }
 
-    async function saveTransaction() {
+    function submitChatInput(step) {
+        if(step === 2) {
+            const inp = document.getElementById('chat-input-name').value.trim();
+            if(!inp) return;
+            chatTxData.name = inp;
+            addUserBubble(inp);
+            advanceChatStep(3);
+        }
+        else if(step === 3) {
+            const inp = document.getElementById('chat-input-amount').value.replace(/\D/g, '');
+            if(!inp || parseInt(inp) <= 0) return;
+            chatTxData.amount = parseInt(inp);
+            addUserBubble(formatRp(inp));
+            advanceChatStep(4);
+        }
+        else if(step === 4) {
+            const inp = document.getElementById('chat-input-cat').value;
+            if(!inp) return;
+            chatTxData.category = inp;
+            addUserBubble(inp);
+            advanceChatStep(5);
+        }
+    }
+
+    async function saveChatTransaction() {
         try {
-            document.getElementById('modal-tx-title').innerText = "Menyimpan...";
-
-            const name = document.getElementById('tx-name').value.trim();
-            const amountVal = document.getElementById('tx-amount').value.replace(/\D/g, '');
-            const amount = parseInt(amountVal);
-            const description = document.getElementById('tx-desc').value.trim() || null;
-
-            if(!name || isNaN(amount) || amount <= 0) {
-                document.getElementById('modal-tx-title').innerText = activeTxId ? "Edit Transaksi" : "Transaksi Baru";
-                return customIOSDialog({type: 'alert', title: 'Input Tidak Valid', msg: 'Nama dan nominal wajib diisi!'});
-            }
-
-            let finalTimestamp = Date.now();
-            let existingTx = null;
-
-            if (activeTxId) {
-                const idx = transactions.findIndex(t => t.id == activeTxId);
-                if (idx === -1) {
-                    document.getElementById('modal-tx-title').innerText = "Edit Transaksi";
-                    return customIOSDialog({type: 'alert', title: 'Gagal Sistem', msg: 'Transaksi tidak ditemukan!'});
-                }
-                existingTx = transactions[idx];
-                finalTimestamp = getValidTimestamp(existingTx.timestamp); 
-            }
+            document.getElementById('btn-save-chat').innerText = "Menyimpan...";
+            document.getElementById('btn-save-chat').disabled = true;
             
-            const selectedWalletId = parseInt(document.getElementById('tx-wallet').value);
+            let finalTimestamp = chatTxData.datetime ? getValidTimestamp(chatTxData.datetime) : Date.now();
+            const selectedWalletId = parseInt(document.getElementById('tx-wallet').value) || activeWalletId;
 
             const transactionData = {
-                id: activeTxId ? existingTx.id : Date.now(),
+                id: chatTxData.id ? chatTxData.id : Date.now(),
                 user_id: currentUser.id,
-                "walletId": selectedWalletId || activeWalletId,
+                walletId: selectedWalletId,
                 timestamp: finalTimestamp,
-                name: name,
-                amount: amount,
-                description: description,
-                type: currentTxType,
-                category: selectedCat || 'Lainnya',
-                icon: selectedIcon || '💸'
+                name: chatTxData.name,
+                amount: chatTxData.amount,
+                description: '', 
+                type: chatTxData.type,
+                category: chatTxData.category,
+                icon: chatTxData.icon
             };
 
-            if (activeTxId) {
+            if (chatTxData.id) {
                 await tursoDb(
                     "UPDATE transactions SET name = ?, amount = ?, description = ?, timestamp = ?, type = ?, category = ?, icon = ?, walletId = ? WHERE id = ?",
-                    [transactionData.name, transactionData.amount, transactionData.description, transactionData.timestamp, transactionData.type, transactionData.category, transactionData.icon, transactionData.walletId, activeTxId]
+                    [transactionData.name, transactionData.amount, transactionData.description, transactionData.timestamp, transactionData.type, transactionData.category, transactionData.icon, transactionData.walletId, chatTxData.id]
                 );
-
-                const updateIdx = transactions.findIndex(t => t.id == activeTxId);
+                const updateIdx = transactions.findIndex(t => t.id == chatTxData.id);
                 transactions[updateIdx] = { ...transactions[updateIdx], ...transactionData };
-
             } else {
                 await tursoDb(
                     "INSERT INTO transactions (id, user_id, walletId, timestamp, name, amount, description, type, category, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [transactionData.id, transactionData.user_id, transactionData.walletId, transactionData.timestamp, transactionData.name, transactionData.amount, transactionData.description, transactionData.type, transactionData.category, transactionData.icon]
                 );
-
                 transactions.unshift(transactionData);
             }
 
@@ -1171,16 +1313,11 @@
             renderWallets(); 
             renderFinance(); 
             closeModal('modal-tx', false);
-
         } catch (error) {
             console.error("Database Update Failed:", error);
-            customIOSDialog({
-                type: 'alert', 
-                title: 'Koneksi Gagal', 
-                msg: 'Gagal menyimpan perubahan ke server. Data dibatalkan.'
-            });
-        } finally {
-            document.getElementById('modal-tx-title').innerText = activeTxId ? "Edit Transaksi" : "Transaksi Baru";
+            customIOSDialog({ type: 'alert', title: 'Koneksi Gagal', msg: 'Gagal menyimpan perubahan ke server.' });
+            document.getElementById('btn-save-chat').innerText = "Simpan";
+            document.getElementById('btn-save-chat').disabled = false;
         }
     }
 
