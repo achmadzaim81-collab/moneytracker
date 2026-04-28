@@ -83,7 +83,8 @@
 
         .section-title { font-size: 18px; font-weight: 600; margin: 5px 0 10px; }
         
-        .section-header-toggle { display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 600; margin: 5px 0 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .section-header-toggle { display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 600; margin: 5px 0; padding: 10px 0; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.25s ease; }
+        .section-header-toggle:active { opacity: 0.5; transform: scale(0.98); }
         
         /* Chart & Summary */
         .chart-container { background: var(--card-bg); border-radius: 16px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
@@ -154,6 +155,7 @@
         .icon-opt.active { border-color: var(--blue); background: #F0F7FF; }
         .icon-add { border: 2px dashed var(--text-sub); background: transparent; color: var(--text-sub); font-size: 18px; }
         .delete-badge { position: absolute; top: -6px; right: -6px; background: var(--red); color: white; width: 20px; height: 20px; border-radius: 10px; font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .edit-badge { position: absolute; bottom: -6px; left: -6px; background: white; border: 1px solid var(--separator); width: 22px; height: 22px; border-radius: 11px; font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         .action-sheet-menu { width: 95%; margin-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateY(100%); transition: transform 0.3s; }
         .modal-overlay.active .action-sheet-menu { transform: translateY(0); }
@@ -162,6 +164,15 @@
         .action-btn:last-child { border-bottom: none; }
         .action-btn.danger { color: var(--red); }
         .action-btn.bold { font-weight: 600; }
+
+        /* iOS Group Box Styles */
+        .ios-group-box { background: white; border-radius: 14px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 1px 5px rgba(0,0,0,0.03); }
+        .ios-list-item { padding: 16px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 16px; background: white; border: none; width: 100%; text-align: left; cursor: pointer; transition: background 0.2s; }
+        .ios-list-item:active { background: #F2F2F7; }
+        .ios-list-item:last-child { border-bottom: none; }
+        .ios-group-box .item-row { margin-bottom: 0; border-radius: 0; border-bottom: 0.5px solid var(--separator); box-shadow: none; background: transparent; }
+        .ios-group-box .item-row:last-child { border-bottom: none; }
+        .ios-group-header { font-size: 13px; font-weight: 600; color: var(--text-sub); margin: 0 0 6px 15px; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .detail-card { background: white; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; }
         .detail-icon { font-size: 50px; margin-bottom: 10px; }
@@ -305,7 +316,6 @@
         <div class="static-header">
             <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px;">
                 <h1>Keuangan</h1>
-                <div onclick="openProfile()" style="font-size: 24px; cursor: pointer; background: var(--card-bg); width: 36px; height: 36px; border-radius: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">👤</div>
             </div>
             <div style="padding: 0 20px 15px;">
                 <p style="font-size: 13px; color: var(--text-sub); font-weight: 500;">Total Aset Saya</p>
@@ -321,13 +331,13 @@
             
             <div class="section-header-toggle" id="stats-header" onclick="toggleStats()" style="display: none;">
                 <span>Statistik</span>
-                <svg id="stats-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-sub); transition: transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1); transform: rotate(0deg);">
+                <svg id="stats-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-sub); transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); transform: rotate(0deg);">
                     <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
             </div>
 
-            <div id="stats-content-wrapper" style="overflow: hidden; transition: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1); transform-origin: top; max-height: 0px; opacity: 0; margin-top: -10px;">
-                <div class="chart-container" id="chart-section" style="display: none;">
+            <div id="stats-content-wrapper" style="overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); max-height: 0px; opacity: 0; margin-top: 0px;">
+                <div class="chart-container ios-group-box" id="chart-section" style="display: none; margin-top: 10px; border-radius: 14px; box-shadow: 0 1px 5px rgba(0,0,0,0.03);">
                     <div class="segmented-control" style="margin-bottom: 15px;">
                         <div id="seg-chart-expense" class="segment-btn active" onclick="setChartMode('expense')">Pengeluaran</div>
                         <div id="seg-chart-income" class="segment-btn" onclick="setChartMode('income')">Pemasukan</div>
@@ -347,8 +357,16 @@
                 </div>
             </div>
 
-            <div class="section-title" id="riwayat-title" style="margin-top: 15px;">Riwayat Transaksi</div>
-            <div id="transaction-list"></div>
+            <div class="section-header-toggle" id="riwayat-header" onclick="toggleHistory()" style="display: none; margin-top: 5px;">
+                <span>Riwayat Transaksi</span>
+                <svg id="riwayat-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-sub); transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); transform: rotate(0deg);">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+
+            <div id="riwayat-content-wrapper" style="overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); max-height: 0px; opacity: 0; margin-top: 0px;">
+                <div id="transaction-list" style="margin-top: 5px;"></div>
+            </div>
         </div>
         <div class="fab" onclick="openTxModal(null)">+</div>
     </div>
@@ -360,18 +378,64 @@
         </div>
     </div>
 
+    <div id="view-settings" class="view">
+        <div class="static-header"><h1>Pengaturan</h1></div>
+        <div class="scroll-content">
+            
+            <div class="ios-group-header">Akun Profil</div>
+            <div class="ios-group-box">
+                <div class="ios-list-item" style="cursor: default;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 35px;">👤</div>
+                        <div>
+                            <div id="set-username" style="font-weight: 700; font-size: 18px; margin-bottom: 2px;">Username</div>
+                            <div style="font-size: 13px; color: var(--text-sub); display: flex; align-items: center; gap: 5px;">
+                                Sandi: <span id="set-password" style="font-family: monospace; letter-spacing: 2px;">••••••••</span>
+                                <span id="set-vis-btn" onclick="togglePasswordVis()" style="color: var(--blue); cursor: pointer; margin-left: 5px; font-weight: 600;">Lihat</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ios-list-item" style="color: var(--red); font-weight: 600; justify-content: center;" onclick="logout()">Log Out Akun</div>
+            </div>
+
+            <div class="ios-group-header" style="display: flex; justify-content: space-between; align-items: center; padding-right: 5px;">
+                <span>Manajemen Kategori & Ikon</span>
+                <span style="color: var(--blue); text-transform: none; font-size: 15px; cursor: pointer; font-weight: 600;" onclick="toggleEditSettings()" id="btn-edit-settings">Edit</span>
+            </div>
+            <div class="segmented-control" style="margin-bottom: 15px;">
+                <div id="seg-set-exp" class="segment-btn active" onclick="setSettingsMode('expense')">Pengeluaran</div>
+                <div id="seg-set-inc" class="segment-btn" onclick="setSettingsMode('income')">Pemasukan</div>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; margin-left: 5px;">Daftar Kategori</div>
+                <div class="chips-container" id="set-cat-list"></div>
+                <button class="action-btn" style="padding: 12px; font-size: 15px; font-weight: 600; margin-top: 15px; background: white; border-radius: 12px; box-shadow: 0 1px 5px rgba(0,0,0,0.03);" onclick="addCategoryUI()">➕ Tambah Kategori Baru</button>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; margin-left: 5px;">Daftar Ikon Emoji</div>
+                <div class="icon-grid" id="set-icon-list" style="grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));"></div>
+                <button class="action-btn" style="padding: 12px; font-size: 15px; font-weight: 600; margin-top: 15px; background: white; border-radius: 12px; box-shadow: 0 1px 5px rgba(0,0,0,0.03);" onclick="addIconUI()">➕ Tambah Ikon Emoji</button>
+            </div>
+            
+        </div>
+    </div>
+
     <div class="tab-bar" id="app-tab-bar" style="display: none;">
         <div class="tab-item active" onclick="switchView('finance', this)"><span class="tab-icon">💳</span>Keuangan</div>
         <div class="tab-item" onclick="switchView('savings', this)"><span class="tab-icon">🎯</span>Nabung</div>
+        <div class="tab-item" onclick="switchView('settings', this)"><span class="tab-icon">⚙️</span>Pengaturan</div>
     </div>
 
     
     <div id="modal-tx" class="modal-overlay">
         <div class="modal-sheet chat-modal-sheet">
             <div class="chat-header">
-                <span style="color: var(--blue); font-size: 26px; cursor: pointer; padding-right: 15px;" onclick="closeModal('modal-tx', false)">‹</span>
+                <span style="color: var(--blue); font-size: 26px; cursor: pointer; padding-right: 15px;" onclick="confirmCloseTxModal()">‹</span>
                 <strong style="font-size: 17px; text-align: center; flex: 1;">Catat Transaksi</strong>
-                <span style="color: var(--blue); font-size: 15px; font-weight: 500; cursor: pointer; padding-left: 10px;" onclick="closeModal('modal-tx', false)">Batal</span>
+                <span style="color: var(--blue); font-size: 15px; font-weight: 500; cursor: pointer; padding-left: 10px;" onclick="confirmCloseTxModal()">Batal</span>
             </div>
             
             <div id="chat-area" class="chat-area"></div>
@@ -552,18 +616,11 @@
     }
 
     let isPassVisible = false;
-    function openProfile() {
-        document.getElementById('prof-username').innerText = currentUser.username || 'User';
-        document.getElementById('prof-password').innerText = '••••••••';
-        document.getElementById('prof-vis-btn').innerText = 'Lihat';
-        isPassVisible = false;
-        showModal('modal-profile');
-    }
     function togglePasswordVis() {
         isPassVisible = !isPassVisible;
-        document.getElementById('prof-password').innerText = isPassVisible ? (currentUser.password || 'Tidak tersimpan') : '••••••••';
-        document.getElementById('prof-password').style.letterSpacing = isPassVisible ? 'normal' : '2px';
-        document.getElementById('prof-vis-btn').innerText = isPassVisible ? 'Sembunyikan' : 'Lihat';
+        document.getElementById('set-password').innerText = isPassVisible ? (currentUser.password || 'Tidak tersimpan') : '••••••••';
+        document.getElementById('set-password').style.letterSpacing = isPassVisible ? 'normal' : '2px';
+        document.getElementById('set-vis-btn').innerText = isPassVisible ? 'Sembunyikan' : 'Lihat';
     }
 
     let wallets = [], transactions = [], savings = [], customCats = [], customIcons = [], customCatsIncome = [], customIconsIncome = [];
@@ -615,7 +672,7 @@
 
     let expenseChartInstance = null;
     let currentChartFilter = 'month', currentChartMode = 'expense';
-    let isStatsOpen = false, customFilterStart = 0, customFilterEnd = Date.now();
+    let isStatsOpen = false, isHistoryOpen = false, customFilterStart = 0, customFilterEnd = Date.now();
     const chartColors = ['#FF3B30', '#FF9500', '#FFCC00', '#34C759', '#5AC8FA', '#007AFF', '#5856D6', '#AF52DE', '#FF2D55'];
 
     const formatRp = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
@@ -688,8 +745,15 @@
 
     function logout() {
         customIOSDialog({ type: 'confirm', title: 'Keluar', msg: 'Yakin ingin log out dari akun ini?', onConfirm: () => {
+            // Bersihkan sisa-sisa state/cache dari memori agar popup detail akun tidak bocor ke akun baru
+            activeModals.forEach(id => { const m = document.getElementById(id); if(m) { m.classList.remove('active'); m.style.display = 'none'; } });
+            activeModals = []; activeSavId = null; activeTxId = null; isStatsOpen = false; isHistoryOpen = false; isWalletExpanded = false;
+            
             localStorage.removeItem('zaim_user'); localStorage.removeItem('zaim_tx'); localStorage.removeItem('zaim_wallets'); localStorage.removeItem('zaim_sav'); currentUser = null;
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('app-tab-bar').style.display = 'none'; document.getElementById('view-auth').style.display = 'flex'; isLoginMode = true; toggleAuthMode(); toggleAuthMode();
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
+            document.getElementById('app-tab-bar').style.display = 'none'; 
+            document.getElementById('view-auth').style.display = 'flex'; 
+            isLoginMode = true; toggleAuthMode(); toggleAuthMode();
         }});
     }
 
@@ -735,7 +799,15 @@
         } catch (error) { customIOSDialog({type: 'alert', title: 'Koneksi Lemah', msg: 'Gagal memuat database terbaru.'}); } 
         finally { hideLoader(); }
     }
-    function updateSettingsCloud() { localStorage.setItem(`zaim_settings_${currentUser.id}`, JSON.stringify({ categories: customCats, icons: customIcons, categoriesIncome: customCatsIncome, iconsIncome: customIconsIncome })); }
+    async function updateSettingsCloud() { 
+        const dataStr = JSON.stringify({ categories: customCats, icons: customIcons, categoriesIncome: customCatsIncome, iconsIncome: customIconsIncome });
+        localStorage.setItem(`zaim_settings_${currentUser.id}`, dataStr); 
+        try { 
+            await tursoDb("CREATE TABLE IF NOT EXISTS user_settings (user_id INTEGER PRIMARY KEY, settings_data TEXT)");
+            await tursoDb("INSERT INTO user_settings (user_id, settings_data) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET settings_data = ?", [currentUser.id, dataStr, dataStr]); 
+        } catch(e) { console.error("Gagal simpan settings", e); }
+        if (document.getElementById('view-settings').classList.contains('active')) renderSettingsMenu();
+    }
 
     function customIOSDialog({ type = 'alert', title = '', msg = '', inputs = [], onConfirm }) {
         clearTimeout(iosDialogTimeout); document.getElementById('alert-title').innerText = title; document.getElementById('alert-title').style.display = title ? 'block' : 'none';
@@ -791,7 +863,127 @@
         }
     }
 
-    function switchView(view, el) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active')); document.getElementById('view-' + view).classList.add('active'); el.classList.add('active'); }
+    function switchView(view, el) { 
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active')); 
+        document.getElementById('view-' + view).classList.add('active'); 
+        el.classList.add('active'); 
+        if (view === 'settings') renderSettingsMenu();
+    }
+
+    // --- PENGATURAN KATEGORI & IKON ---
+    let settingsMode = 'expense';
+    let isSettingsEditMode = false;
+
+    function toggleEditSettings() {
+        isSettingsEditMode = !isSettingsEditMode;
+        document.getElementById('btn-edit-settings').innerText = isSettingsEditMode ? 'Selesai' : 'Edit';
+        renderSettingsMenu();
+    }
+
+    function setSettingsMode(mode) { 
+        settingsMode = mode; 
+        document.getElementById('seg-set-exp').classList.toggle('active', mode === 'expense'); 
+        document.getElementById('seg-set-inc').classList.toggle('active', mode === 'income'); 
+        isSettingsEditMode = false;
+        document.getElementById('btn-edit-settings').innerText = 'Edit';
+        renderSettingsMenu(); 
+    }
+
+    function renderSettingsMenu() {
+        if(!currentUser) return;
+        document.getElementById('set-username').innerText = currentUser.username;
+        document.getElementById('set-password').innerText = isPassVisible ? currentUser.password : '••••••••';
+        document.getElementById('set-password').style.letterSpacing = isPassVisible ? 'normal' : '2px';
+        document.getElementById('set-vis-btn').innerText = isPassVisible ? 'Sembunyikan' : 'Lihat';
+
+        const cats = settingsMode === 'expense' ? customCats : customCatsIncome;
+        const icons = settingsMode === 'expense' ? customIcons : customIconsIncome;
+
+        document.getElementById('set-cat-list').innerHTML = cats.map((c, i) => `
+            <div class="chip" style="font-size: 14px; padding: 10px 16px; position: relative;">
+                ${c}
+                ${isSettingsEditMode ? `
+                    <div class="edit-badge" onclick="editCatUI(${i})">✏️</div>
+                    <div class="delete-badge" onclick="delCatUI(${i})">✕</div>
+                ` : ''}
+            </div>
+        `).join('');
+            
+        document.getElementById('set-icon-list').innerHTML = icons.map((ic, i) => `
+            <div class="icon-opt" style="position: relative;">
+                ${ic}
+                ${isSettingsEditMode ? `
+                    <div class="edit-badge" onclick="editIconUI(${i})">✏️</div>
+                    <div class="delete-badge" onclick="delIconUI(${i})">✕</div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    function addCategoryUI() { 
+        customIOSDialog({ type: 'prompt', title: 'Tambah Kategori', msg: 'Nama kategori baru', inputs: [{ placeholder: 'Misal: Asuransi' }], onConfirm: (vals) => { 
+            if(vals[0]) { 
+                if(settingsMode === 'expense') customCats.push(vals[0]); 
+                else customCatsIncome.push(vals[0]); 
+                updateSettingsCloud(); 
+            } 
+        }}); 
+    }
+
+    function editCatUI(idx) {
+        const list = settingsMode === 'expense' ? customCats : customCatsIncome;
+        customIOSDialog({ type: 'prompt', title: 'Edit Kategori', msg: 'Ubah nama kategori', inputs: [{ value: list[idx] }], onConfirm: (vals) => {
+            if(vals[0]) { list[idx] = vals[0]; updateSettingsCloud(); }
+        }});
+    }
+    
+    function delCatUI(idx) { 
+        customIOSDialog({ type: 'confirm', title: 'Hapus Kategori', msg: 'Yakin ingin menghapus kategori ini?', onConfirm: () => {
+            if(settingsMode === 'expense') customCats.splice(idx, 1); 
+            else customCatsIncome.splice(idx, 1); 
+            updateSettingsCloud(); 
+        }});
+    }
+    
+    function addIconUI() { 
+        customIOSDialog({ type: 'prompt', title: 'Tambah Ikon Emoji', msg: 'Masukkan 1 emoji saja', inputs: [{ placeholder: 'Emoji (Contoh: 🍕)' }], onConfirm: (vals) => { 
+            if(vals[0]) { 
+                const emojiRegex = /[\p{Extended_Pictographic}]/u;
+                if (!emojiRegex.test(vals[0])) {
+                    setTimeout(() => customIOSDialog({type: 'alert', title: 'Gagal Menyimpan', msg: 'Ikon harus berupa Emoji, bukan abjad atau angka biasa!'}), 300);
+                    return;
+                }
+                const emoji = Array.from(vals[0])[0]; 
+                if(settingsMode === 'expense') customIcons.push(emoji); 
+                else customIconsIncome.push(emoji); 
+                updateSettingsCloud(); 
+            } 
+        }}); 
+    }
+
+    function editIconUI(idx) {
+        const list = settingsMode === 'expense' ? customIcons : customIconsIncome;
+        customIOSDialog({ type: 'prompt', title: 'Edit Ikon Emoji', msg: 'Ubah emoji', inputs: [{ value: list[idx] }], onConfirm: (vals) => {
+            if(vals[0]) {
+                const emojiRegex = /[\p{Extended_Pictographic}]/u;
+                if (!emojiRegex.test(vals[0])) {
+                    setTimeout(() => customIOSDialog({type: 'alert', title: 'Gagal', msg: 'Harus berupa emoji!'}), 300);
+                    return;
+                }
+                list[idx] = Array.from(vals[0])[0];
+                updateSettingsCloud();
+            }
+        }});
+    }
+    
+    function delIconUI(idx) { 
+        customIOSDialog({ type: 'confirm', title: 'Hapus Ikon', msg: 'Yakin ingin menghapus ikon emoji ini?', onConfirm: () => {
+            if(settingsMode === 'expense') customIcons.splice(idx, 1); 
+            else customIconsIncome.splice(idx, 1); 
+            updateSettingsCloud(); 
+        }});
+    }
 
     // --- DOMPET (DENGAN CHEVRON KIRI) ---
     // --- DOMPET (DENGAN CHEVRON KIRI) ---
@@ -959,9 +1151,16 @@
     // --- CHART STATISTIK ---
     function toggleStats() {
         isStatsOpen = !isStatsOpen; const wrapper = document.getElementById('stats-content-wrapper'); const chevron = document.getElementById('stats-chevron');
-        if(isStatsOpen) { wrapper.style.maxHeight = '800px'; wrapper.style.opacity = '1'; wrapper.style.marginTop = '0'; chevron.style.transform = 'rotate(180deg)'; } 
-        else { wrapper.style.maxHeight = '0px'; wrapper.style.opacity = '0'; wrapper.style.marginTop = '-10px'; chevron.style.transform = 'rotate(0deg)'; }
+        if(isStatsOpen) { wrapper.style.maxHeight = wrapper.scrollHeight + 100 + 'px'; wrapper.style.opacity = '1'; chevron.style.transform = 'rotate(180deg)'; setTimeout(() => { wrapper.style.maxHeight = '2000px'; }, 300); } 
+        else { wrapper.style.maxHeight = '0px'; wrapper.style.opacity = '0'; chevron.style.transform = 'rotate(0deg)'; }
     }
+
+    function toggleHistory() {
+        isHistoryOpen = !isHistoryOpen; const wrapper = document.getElementById('riwayat-content-wrapper'); const chevron = document.getElementById('riwayat-chevron');
+        if(isHistoryOpen) { wrapper.style.maxHeight = wrapper.scrollHeight + 100 + 'px'; wrapper.style.opacity = '1'; chevron.style.transform = 'rotate(180deg)'; setTimeout(() => { wrapper.style.maxHeight = '5000px'; }, 300); } 
+        else { wrapper.style.maxHeight = '0px'; wrapper.style.opacity = '0'; chevron.style.transform = 'rotate(0deg)'; }
+    }
+    
     function setChartMode(mode) { currentChartMode = mode; document.getElementById('seg-chart-expense').classList.toggle('active', mode === 'expense'); document.getElementById('seg-chart-income').classList.toggle('active', mode === 'income'); renderChart(); }
     function setChartFilter(filter, btnElement) {
         if(filter === 'custom') {
@@ -976,18 +1175,74 @@
         expenseChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 0, hoverOffset: isEmptyState ? 0 : 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false }, tooltip: { enabled: !isEmptyState, callbacks: { label: function(context) { return ' ' + context.label + ': ' + formatRp(context.raw); } }, bodyFont: { family: '-apple-system, sans-serif' }, padding: 10, backgroundColor: 'rgba(0,0,0,0.8)', cornerRadius: 8 } } } });
     }
     function renderChart() {
-        // PERBAIKAN: Kecualikan 'Transfer' dan 'Tabungan' agar tidak merusak insight pengeluaran
         const activeTx = transactions.filter(t => t.walletId == activeWalletId && t.type === currentChartMode && t.category !== 'Transfer' && t.category !== 'Tabungan'); 
-        const now = new Date(); let filteredTx = [];
-        if(currentChartFilter === 'today') { const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); filteredTx = activeTx.filter(t => t.timestamp >= start); } 
-        else if (currentChartFilter === 'week') { const start = new Date(now.setDate(now.getDate() - now.getDay())).setHours(0,0,0,0); filteredTx = activeTx.filter(t => t.timestamp >= start); } 
-        else if (currentChartFilter === 'month') { const start = new Date(now.getFullYear(), now.getMonth(), 1).getTime(); filteredTx = activeTx.filter(t => t.timestamp >= start); } 
-        else if (currentChartFilter === 'year') { const start = new Date(now.getFullYear(), 0, 1).getTime(); filteredTx = activeTx.filter(t => t.timestamp >= start); } 
-        else if (currentChartFilter === 'all') { filteredTx = activeTx; }
-        else if (currentChartFilter === 'custom') { filteredTx = activeTx.filter(t => t.timestamp >= customFilterStart && t.timestamp <= customFilterEnd); }
+        const now = new Date(); 
+        
+        let filteredTx = [];
+        let prevFilteredTx = [];
+        let timeLabel = '';
 
-        const catTotals = {}; let totalAmount = 0;
-        filteredTx.forEach(tx => { catTotals[tx.category] = (catTotals[tx.category] || 0) + tx.amount; totalAmount += tx.amount; });
+        if(currentChartFilter === 'today') { 
+            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); 
+            filteredTx = activeTx.filter(t => t.timestamp >= start); 
+            const prevStart = start - (24 * 60 * 60 * 1000);
+            const prevEnd = start - 1;
+            prevFilteredTx = activeTx.filter(t => t.timestamp >= prevStart && t.timestamp <= prevEnd);
+            timeLabel = 'hari kemarin';
+        } 
+        else if (currentChartFilter === 'week') { 
+            const start = new Date(now.setDate(now.getDate() - now.getDay())).setHours(0,0,0,0); 
+            filteredTx = activeTx.filter(t => t.timestamp >= start); 
+            const prevStart = start - (7 * 24 * 60 * 60 * 1000);
+            const prevEnd = start - 1;
+            prevFilteredTx = activeTx.filter(t => t.timestamp >= prevStart && t.timestamp <= prevEnd);
+            timeLabel = 'minggu lalu';
+        } 
+        else if (currentChartFilter === 'month') { 
+            const start = new Date(now.getFullYear(), now.getMonth(), 1).getTime(); 
+            filteredTx = activeTx.filter(t => t.timestamp >= start); 
+            const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+            const prevEnd = start - 1;
+            prevFilteredTx = activeTx.filter(t => t.timestamp >= prevStart && t.timestamp <= prevEnd);
+            timeLabel = 'bulan lalu';
+        } 
+        else if (currentChartFilter === 'year') { 
+            const start = new Date(now.getFullYear(), 0, 1).getTime(); 
+            filteredTx = activeTx.filter(t => t.timestamp >= start); 
+            const prevStart = new Date(now.getFullYear() - 1, 0, 1).getTime();
+            const prevEnd = start - 1;
+            prevFilteredTx = activeTx.filter(t => t.timestamp >= prevStart && t.timestamp <= prevEnd);
+            timeLabel = 'tahun lalu';
+        } 
+        else if (currentChartFilter === 'all') { 
+            filteredTx = activeTx; 
+            prevFilteredTx = []; 
+            timeLabel = '';
+        }
+        else if (currentChartFilter === 'custom') { 
+            filteredTx = activeTx.filter(t => t.timestamp >= customFilterStart && t.timestamp <= customFilterEnd); 
+            const duration = customFilterEnd - customFilterStart;
+            const prevStart = customFilterStart - duration - 1;
+            const prevEnd = customFilterStart - 1;
+            prevFilteredTx = activeTx.filter(t => t.timestamp >= prevStart && t.timestamp <= prevEnd);
+            timeLabel = 'periode sebelumnya';
+        }
+
+        const catTotals = {}; 
+        const catCounts = {}; 
+        let totalAmount = 0;
+        
+        filteredTx.forEach(tx => { 
+            catTotals[tx.category] = (catTotals[tx.category] || 0) + tx.amount; 
+            catCounts[tx.category] = (catCounts[tx.category] || 0) + 1;
+            totalAmount += tx.amount; 
+        });
+
+        const prevCatTotals = {};
+        prevFilteredTx.forEach(tx => {
+            prevCatTotals[tx.category] = (prevCatTotals[tx.category] || 0) + tx.amount;
+        });
+
         const summaryDiv = document.getElementById('chart-summary');
         
         if(totalAmount === 0) {
@@ -995,22 +1250,54 @@
             summaryDiv.innerHTML = `<p style="text-align:center; font-size:13px; color:var(--text-sub); padding:10px 0;">Tidak ada ${currentChartMode === 'expense' ? 'pengeluaran' : 'pemasukan'} murni di periode ini.</p>`;
         } else {
             const sortedKeys = Object.keys(catTotals).sort((a, b) => catTotals[b] - catTotals[a]);
-            const labels = sortedKeys; const data = sortedKeys.map(k => catTotals[k]); const bgColors = labels.map((_, i) => chartColors[i % chartColors.length]);
+            const labels = sortedKeys; 
+            const data = sortedKeys.map(k => catTotals[k]); 
+            const bgColors = labels.map((_, i) => chartColors[i % chartColors.length]);
             drawDonutChart(labels, data, bgColors, false);
             
-            // INSIGHT 13 & BANDINGKAN BULAN 12
             const topCat = labels[data.indexOf(Math.max(...data))];
-            const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
-            const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0).getTime();
-            const lastMonthTotal = transactions.filter(t => t.walletId == activeWalletId && t.type === currentChartMode && t.timestamp >= lastMonthStart && t.timestamp <= lastMonthEnd && t.category !== 'Transfer' && t.category !== 'Tabungan').reduce((a, b) => a + b.amount, 0);
+            const prevTotalAll = prevFilteredTx.reduce((a, b) => a + b.amount, 0);
             
-            let compareHtml = lastMonthTotal > 0 ? `<p style="font-size:12px; color:var(--text-sub); margin-bottom:10px;">Bulan lalu: ${formatRp(lastMonthTotal)} (${totalAmount > lastMonthTotal ? ' naik 📈' : ' turun 📉'})</p>` : '';
+            let compareHtml = prevTotalAll > 0 ? `<p style="font-size:12px; color:var(--text-sub); margin-bottom:10px;">Total ${timeLabel}: ${formatRp(prevTotalAll)} (${totalAmount > prevTotalAll ? ' naik 📈' : ' turun 📉'})</p>` : '';
             let insightHtml = currentChartMode === 'expense' ? `<div style="background:rgba(0,122,255,0.05); padding:10px; border-radius:10px; margin-bottom:15px; font-size:13px; color:var(--blue); border-left:3px solid var(--blue);">💡 Pengeluaran terbanyakmu ada di <b>${topCat}</b>. Coba kurangi sedikit minggu depan!</div>` : '';
 
-            summaryDiv.innerHTML = insightHtml + compareHtml + labels.map((label, i) => { const perc = Math.round((data[i] / totalAmount) * 100); return `<div class="chart-summary-item"><div style="display:flex; align-items:center;"><span class="cat-color-dot" style="background:${bgColors[i]}"></span><span>${label}</span></div><div style="text-align:right;"><span style="font-weight:600;">${formatRp(data[i])}</span><span style="color:var(--text-sub); font-size:12px; margin-left:10px; width:35px; display:inline-block; text-align:right;">${perc}%</span></div></div>`; }).join('');
+            summaryDiv.innerHTML = insightHtml + compareHtml + labels.map((label, i) => { 
+                const perc = Math.round((data[i] / totalAmount) * 100); 
+                const count = catCounts[label];
+                const prevAmount = prevCatTotals[label] || 0;
+                let diffText = '';
+
+                if (timeLabel !== '') {
+                    if (prevAmount === 0) {
+                        diffText = `baru muncul di periode ini`;
+                    } else {
+                        const diffPerc = Math.round(Math.abs((data[i] - prevAmount) / prevAmount) * 100);
+                        const isMore = data[i] > prevAmount;
+                        diffText = `lebih ${isMore ? 'banyak' : 'sedikit'} ${diffPerc}% dari ${timeLabel}`;
+                    }
+                }
+                
+                const verb = currentChartMode === 'expense' ? 'mengeluarkan uang ke' : 'mendapat pemasukan dari';
+
+                return `
+                <div class="chart-summary-item" style="flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 0;">
+                    <div style="display:flex; justify-content:space-between; width: 100%; align-items:center;">
+                        <div style="display:flex; align-items:center;">
+                            <span class="cat-color-dot" style="background:${bgColors[i]}"></span>
+                            <span style="font-weight:600; font-size: 15px;">${label}</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <span style="font-weight:600; font-size: 15px;">${formatRp(data[i])}</span>
+                            <span style="color:var(--text-sub); font-size:12px; margin-left:10px; width:35px; display:inline-block; text-align:right;">${perc}%</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-sub); line-height: 1.4; padding-left: 22px;">
+                        Kamu udah ${verb} ${label} sebanyak ${count}x${diffText ? ', ' + diffText : ''}.
+                    </div>
+                </div>`; 
+            }).join('');
         }
     }
-
     // --- TRANSAKSI ---
     function getDayLabel(ts) {
         ts = getValidTimestamp(ts);
@@ -1024,12 +1311,19 @@
         const list = document.getElementById('transaction-list'); list.innerHTML = ''; 
         const search = document.getElementById('search-tx').value.toLowerCase();
         const allActiveTx = transactions.filter(t => t.walletId == activeWalletId && (t.name.toLowerCase().includes(search) || t.category.toLowerCase().includes(search)));
-        const statsHeader = document.getElementById('stats-header'), chartSection = document.getElementById('chart-section'), riwayatTitle = document.getElementById('riwayat-title');
+        const statsHeader = document.getElementById('stats-header'), chartSection = document.getElementById('chart-section'), riwayatHeader = document.getElementById('riwayat-header'), riwayatWrapper = document.getElementById('riwayat-content-wrapper');
 
         if(allActiveTx.length === 0) { 
-            statsHeader.style.display = 'none'; chartSection.style.display = 'none'; riwayatTitle.style.display = 'none';
-            list.innerHTML = `<div style="text-align:center; margin-top:50px;"><div style="font-size:40px; margin-bottom:10px;">👻</div><p style="color:var(--text-sub); font-size:15px;">Belum ada riwayat transaksi.</p></div>`; return; 
-        } else { statsHeader.style.display = 'flex'; chartSection.style.display = 'block'; riwayatTitle.style.display = 'block'; renderChart(); }
+            statsHeader.style.display = 'none'; chartSection.style.display = 'none'; riwayatHeader.style.display = 'none';
+            list.innerHTML = `<div style="text-align:center; margin-top:50px;"><div style="font-size:40px; margin-bottom:10px;">👻</div><p style="color:var(--text-sub); font-size:15px;">Belum ada riwayat transaksi.</p></div>`; 
+            riwayatWrapper.style.maxHeight = '500px'; riwayatWrapper.style.opacity = '1';
+            return; 
+        } else { 
+            statsHeader.style.display = 'flex'; chartSection.style.display = 'block'; riwayatHeader.style.display = 'flex'; 
+            if (isHistoryOpen) { riwayatWrapper.style.maxHeight = '5000px'; riwayatWrapper.style.opacity = '1'; }
+            else { riwayatWrapper.style.maxHeight = '0px'; riwayatWrapper.style.opacity = '0'; }
+            renderChart(); 
+        }
         
         let lastDay = null;
         allActiveTx.forEach(tx => {
@@ -1091,6 +1385,15 @@
 
     // -- VARIABEL STATE CHAT INPUT --
     let chatTxData = { id: null, type: 'expense', name: '', amount: 0, category: '', datetime: '', icon: '' };
+
+    function confirmCloseTxModal() {
+        customIOSDialog({ 
+            type: 'confirm', 
+            title: 'Batal Mencatat?', 
+            msg: 'Apakah yakin meninggalkan halaman catatan keuangan ini? Data yang belum disimpan akan hilang.', 
+            onConfirm: () => { closeModal('modal-tx', false); }
+        });
+    }
 
     function openTxModal(editId = null) {
         if(typeof editId === 'object') editId = null; 
@@ -1166,15 +1469,14 @@
         else if(step === 4) {
             addAIBubble("Pilih kategori yang sesuai.");
             const listCat = chatTxData.type === 'income' ? customCatsIncome : customCats;
-            const opts = listCat.map(c => `<option value="${c}">${c}</option>`).join('');
+            let catHtml = listCat.map(c => `<div class="chat-btn-opt" style="flex: 1 1 calc(50% - 15px); min-width:130px; font-size:14px; padding:12px;" onclick="handleChatSelect(4, '${c}', '${c}')">${c}</div>`).join('');
             
-            inputArea.innerHTML = `
-                <select id="chat-input-cat" class="chat-sticky-input qi-select" style="margin:0; appearance:none; color:var(--text-main); font-weight:500;" onchange="submitChatInput(4)">
-                    <option value="" disabled selected>Pilih Kategori...</option>
-                    ${opts}
-                </select>
-                <button class="chat-send-btn" onclick="submitChatInput(4)">↑</button>
-            `;
+            chatArea.innerHTML += `
+                <div class="chat-options" id="opt-step-4" style="flex-direction:row; flex-wrap:wrap; max-width:100%; justify-content:flex-start;">
+                    ${catHtml}
+                </div>`;
+            inputArea.style.display = 'none'; // Sembunyikan input text bar sementara
+            scrollToBottomChat();
         }
         else if(step === 5) {
             addAIBubble("Tanggal & jam? (Opsional)");
@@ -1235,6 +1537,7 @@
         if(displayVal) addUserBubble(displayVal);
         
         if(step === 1) { chatTxData.type = val; advanceChatStep(2); }
+        else if(step === 4) { chatTxData.category = val; document.getElementById('chat-input-area').style.display = 'flex'; advanceChatStep(5); }
         else if(step === 5) {
             if(val !== 'skip') chatTxData.datetime = val;
             else chatTxData.datetime = Date.now();
